@@ -1,0 +1,287 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>Neuron WebAR (Poster-Tracked)</title>
+  <style>
+    html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; }
+    #ui {
+      position: fixed; left: 12px; top: 12px; z-index: 10;
+      color: #fff; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: rgba(0,0,0,0.45); padding: 10px 12px; border-radius: 12px;
+      backdrop-filter: blur(8px);
+    }
+    #ui small { opacity: 0.85; display:block; margin-top:6px; line-height:1.2; }
+    #hint { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+      color:#fff; font-family: system-ui; background: rgba(0,0,0,0.45);
+      padding: 10px 14px; border-radius: 999px; z-index: 10;
+    }
+  </style>
+
+  <!-- MindAR + Three -->
+  <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
+</head>
+
+<body>
+  <div id="ui">
+    <b>Neuron WebAR</b>
+    <small>
+      1) Point camera at the poster<br/>
+      2) Tap a colored dot to fire<br/>
+      3) Watch spikes travel along synapses
+    </small>
+  </div>
+  <div id="hint">Tap neurons to fire ⚡</div>
+
+  <script>
+    // -----------------------------
+    // CONFIG: neuron positions on the poster
+    // Coordinates are normalized in poster space:
+    // x,y in [-0.5, +0.5] where (0,0) is center of poster.
+    // You can tweak these to align with your dots.
+    // -----------------------------
+    const NEURONS = [
+      { id:"n1",  x:-0.28, y: 0.22, color: 0xffd54a },
+      { id:"n2",  x:-0.05, y: 0.18, color: 0x6dff5f },
+      { id:"n3",  x: 0.20, y: 0.12, color: 0x57b7ff },
+      { id:"n4",  x: 0.30, y:-0.05, color: 0xffd54a },
+      { id:"n5",  x:-0.22, y:-0.10, color: 0xc04dff },
+      { id:"n6",  x: 0.05, y:-0.22, color: 0x6dff5f },
+      { id:"n7",  x:-0.35, y:-0.28, color: 0xffd54a },
+      { id:"n8",  x: 0.32, y: 0.30, color: 0xffd54a },
+      { id:"n9",  x: 0.10, y: 0.02, color: 0xc04dff },
+      { id:"n10", x:-0.10, y: 0.33, color: 0x57b7ff },
+    ];
+
+    // Poster plane size in AR world units (tweak if needed)
+    const POSTER_W = 1.0;  // meters-ish
+    const POSTER_H = 1.33;
+
+    // Connection strategy: connect each neuron to K nearest neighbors
+    const K_NEIGHBORS = 3;
+
+    // Spike animation parameters
+    const SPIKE_SPEED = 1.6;  // units per second along line (relative)
+    const PULSE_TIME  = 0.22; // seconds
+
+    // -----------------------------
+    // Utility
+    // -----------------------------
+    const dist2 = (a,b) => (a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y);
+    const lerp = (a,b,t) => a + (b-a)*t;
+
+    function normalizedToWorld(nx, ny) {
+      // Map normalized poster coords to world coords on poster plane
+      const wx = nx * POSTER_W;
+      const wy = ny * POSTER_H;
+      return new THREE.Vector3(wx, wy, 0);
+    }
+
+    // -----------------------------
+    // Main AR
+    // -----------------------------
+    (async () => {
+      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+        container: document.body,
+        imageTargetSrc: "assets/targets.mind",
+        maxTrack: 1,
+        uiLoading: "no",
+        uiScanning: "yes",
+      });
+
+      const { renderer, scene, camera } = mindarThree;
+
+      // Lighting
+      scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+
+      // Anchor to the poster target (index 0)
+      const anchor = mindarThree.addAnchor(0);
+      const root = anchor.group;
+
+      // (Optional) add an invisible plane roughly matching poster
+      const planeGeo = new THREE.PlaneGeometry(POSTER_W, POSTER_H);
+      const planeMat = new THREE.MeshBasicMaterial({ transparent:true, opacity:0.0 });
+      const posterPlane = new THREE.Mesh(planeGeo, planeMat);
+      root.add(posterPlane);
+
+      // Create neuron meshes
+      const neuronMeshes = [];
+      const neuronById = new Map();
+
+      function makeNeuronDot(color) {
+        const geo = new THREE.SphereGeometry(0.018, 24, 24);
+        const mat = new THREE.MeshStandardMaterial({
+          color,
+          emissive: color,
+          emissiveIntensity: 0.75,
+          roughness: 0.25,
+          metalness: 0.0
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.userData.baseScale = 1.0;
+        mesh.userData.pulseT = 0;
+        return mesh;
+      }
+
+      for (const n of NEURONS) {
+        const mesh = makeNeuronDot(n.color);
+        mesh.position.copy(normalizedToWorld(n.x, n.y));
+        mesh.userData.neuronId = n.id;
+        root.add(mesh);
+        neuronMeshes.push(mesh);
+        neuronById.set(n.id, { ...n, mesh });
+      }
+
+      // Build connections (K nearest neighbors)
+      const connections = [];
+      for (const a of NEURONS) {
+        const neighbors = [...NEURONS]
+          .filter(b => b.id !== a.id)
+          .map(b => ({ b, d: dist2(a,b) }))
+          .sort((p,q) => p.d - q.d)
+          .slice(0, K_NEIGHBORS)
+          .map(p => p.b);
+
+        for (const b of neighbors) {
+          // Avoid duplicates by ordering id
+          const key = a.id < b.id ? `${a.id}-${b.id}` : `${b.id}-${a.id}`;
+          if (connections.some(c => c.key === key)) continue;
+
+          const aPos = normalizedToWorld(a.x, a.y);
+          const bPos = normalizedToWorld(b.x, b.y);
+
+          const geom = new THREE.BufferGeometry().setFromPoints([aPos, bPos]);
+          const mat = new THREE.LineBasicMaterial({ color: 0x88aaff, transparent:true, opacity:0.35 });
+          const line = new THREE.Line(geom, mat);
+          root.add(line);
+
+          connections.push({ key, a: a.id, b: b.id, aPos, bPos, line });
+        }
+      }
+
+      // Spike particle (reused)
+      const spikeGeo = new THREE.SphereGeometry(0.010, 16, 16);
+      const spikeMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0xffffff,
+        emissiveIntensity: 1.0,
+        roughness: 0.2,
+      });
+      const spike = new THREE.Mesh(spikeGeo, spikeMat);
+      spike.visible = false;
+      root.add(spike);
+
+      // Active spike animation state
+      const activeSpikes = []; // { fromId, toId, t, color }
+
+      function triggerPulse(mesh) {
+        mesh.userData.pulseT = PULSE_TIME;
+      }
+
+      function fireFrom(neuronId) {
+        const src = neuronById.get(neuronId);
+        if (!src) return;
+
+        triggerPulse(src.mesh);
+
+        // Find outgoing connections
+        const outgoing = connections.filter(c => c.a === neuronId || c.b === neuronId);
+
+        // Add a few spikes (limit for performance)
+        for (const c of outgoing.slice(0, 4)) {
+          const toId = (c.a === neuronId) ? c.b : c.a;
+          activeSpikes.push({
+            fromId: neuronId,
+            toId,
+            t: 0,
+            color: src.color
+          });
+        }
+      }
+
+      // Raycast for taps
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+
+      function onPointerDown(e) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -(((clientY - rect.top) / rect.height) * 2 - 1);
+
+        raycaster.setFromCamera(pointer, camera);
+        const hits = raycaster.intersectObjects(neuronMeshes, true);
+        if (hits.length) {
+          const mesh = hits[0].object;
+          fireFrom(mesh.userData.neuronId);
+        }
+      }
+
+      window.addEventListener("pointerdown", onPointerDown, { passive: true });
+      window.addEventListener("touchstart", onPointerDown, { passive: true });
+
+      // Render loop
+      const clock = new THREE.Clock();
+
+      await mindarThree.start();
+      renderer.setAnimationLoop(() => {
+        const dt = Math.min(clock.getDelta(), 0.033);
+
+        // Pulse animation
+        for (const m of neuronMeshes) {
+          if (m.userData.pulseT > 0) {
+            m.userData.pulseT -= dt;
+            const k = Math.max(m.userData.pulseT / PULSE_TIME, 0);
+            const s = 1.0 + 0.55 * Math.sin((1 - k) * Math.PI);
+            m.scale.setScalar(s);
+            m.material.emissiveIntensity = 0.75 + 0.9 * (1 - k);
+          } else {
+            m.scale.setScalar(1.0);
+            m.material.emissiveIntensity = 0.75;
+          }
+        }
+
+        // Spike animations (multiple)
+        // We draw them one-by-one using a single mesh for simplicity:
+        if (activeSpikes.length > 0) {
+          const sp = activeSpikes[0];
+          const a = neuronById.get(sp.fromId);
+          const b = neuronById.get(sp.toId);
+          if (a && b) {
+            sp.t += dt * SPIKE_SPEED;
+            const t = Math.min(sp.t, 1.0);
+
+            // move spike
+            spike.visible = true;
+            spike.material.color.setHex(sp.color);
+            spike.material.emissive.setHex(sp.color);
+
+            spike.position.set(
+              lerp(a.mesh.position.x, b.mesh.position.x, t),
+              lerp(a.mesh.position.y, b.mesh.position.y, t),
+              0.01
+            );
+
+            // on arrival, pulse destination
+            if (sp.t >= 1.0) {
+              triggerPulse(b.mesh);
+              activeSpikes.shift();
+              if (activeSpikes.length === 0) spike.visible = false;
+            }
+          } else {
+            activeSpikes.shift();
+          }
+        } else {
+          spike.visible = false;
+        }
+
+        renderer.render(scene, camera);
+      });
+
+    })();
+  </script>
+</body>
+</html>
