@@ -1,89 +1,322 @@
 <!doctype html>
 <html>
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Neuron WebAR</title>
-
-<style>
-html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:sans-serif}
-#overlay{
-position:fixed;inset:0;display:flex;flex-direction:column;
-align-items:center;justify-content:center;background:rgba(0,0,0,.8);
-color:#fff;z-index:10;text-align:center;padding:20px
-}
-button{padding:14px 20px;font-size:18px;border-radius:12px;border:none;background:#2b8cff;color:white}
-#log{margin-top:10px;font-size:12px;opacity:.8;white-space:pre-wrap}
-</style>
-
-<!-- LOCAL FILES (NO CDN) -->
-<script defer src="vendor/three.min.js"></script>
-<script defer src="vendor/mindar-image-three.prod.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>The Neural Night — WebAR</title>
+  <style>
+    html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; font-family: system-ui; }
+    #intro {
+      position: fixed; inset: 0; z-index: 10;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap: 12px; color:#fff; background: radial-gradient(ellipse at center,#0d1520,#040608);
+      text-align:center; padding:18px;
+    }
+    #intro h1 { margin:0; font-size: 28px; letter-spacing: .08em; text-transform: uppercase; }
+    #intro p { margin:0; opacity:.85; max-width: 520px; line-height:1.5; }
+    #startBtn { padding: 14px 18px; border-radius: 12px; border:none; background:#2b8cff; color:#fff; font-size: 16px; }
+    #log { margin-top: 10px; font-size: 12px; opacity: .85; white-space: pre-wrap; text-align:left; max-width: 720px; }
+  </style>
 </head>
 
 <body>
+  <div id="intro">
+    <h1>The Neural Night</h1>
+    <p>Point your camera at the poster. Tap to fire a neuron and watch spikes flow through the network.</p>
+    <button id="startBtn">Start WebAR</button>
+    <div id="log"></div>
+  </div>
 
-<div id="overlay">
-<h2>Neuron WebAR</h2>
-Tap Start → allow camera → point at poster
-<br><br>
-<button id="start">Start AR</button>
-<div id="log"></div>
-</div>
+  <script>
+    const logEl = document.getElementById("log");
+    const log = (m) => { console.log(m); logEl.textContent += m + "\n"; };
 
-<script>
-const log=(t)=>document.getElementById("log").textContent+=t+"\n";
+    // Load scripts in order (no CDN). Cache-bust with ?v=
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error("Failed to load " + src));
+        document.head.appendChild(s);
+      });
+    }
 
-document.getElementById("start").onclick=async()=>{
+    // ---------- Your neuron animation (adapted to poster space) ----------
+    function makeNeuralSim() {
+      // Poster-space coordinates: x,y in [0..1] across the poster plane
+      const neurons = [];
+      const signals = [];
+      const stars = [];
 
-try{
-log("checking libs...");
-log("THREE = "+!!window.THREE);
-log("MINDAR = "+!!window.MINDAR);
+      const N = 90; // density
+      for (let i = 0; i < N; i++) {
+        neurons.push({
+          x: Math.random(),
+          y: Math.random(),
+          r: 0.006 + Math.random() * 0.015,   // relative radius in poster space
+          fire: 0,
+          type: Math.random() < 0.13 ? "attn" : (Math.random() < 0.16 ? "inhib" : "excit"),
+          connections: []
+        });
+      }
 
-if(!window.MINDAR){
-throw "MindAR not loaded — vendor file missing or wrong path";
-}
+      // connect to nearby nodes
+      for (const n of neurons) {
+        for (const m of neurons) {
+          if (n === m) continue;
+          const dx = n.x - m.x, dy = n.y - m.y;
+          const d = Math.sqrt(dx*dx + dy*dy);
+          if (d < 0.18 && Math.random() < 0.22) n.connections.push(m);
+        }
+      }
 
-const mindarThree=new window.MINDAR.IMAGE.MindARThree({
-container:document.body,
-imageTargetSrc:"assets/targets.mind",
-uiLoading:"no",
-uiScanning:"yes"
-});
+      function fireAt(u, v) {
+        // find nearest neuron to uv
+        let best = null, bd = 1e9;
+        for (const n of neurons) {
+          const d = Math.hypot(n.x - u, n.y - v);
+          if (d < bd) { bd = d; best = n; }
+        }
+        if (!best || bd > 0.12) return; // tap tolerance
 
-const{renderer,scene,camera}=mindarThree;
+        best.fire = 90;
 
-scene.add(new THREE.AmbientLight(0xffffff,1));
+        // propagate to connections
+        const outs = best.connections.slice(0, 5);
+        for (const to of outs) {
+          signals.push({ from: best, to, p: 0, speed: 0.035, color: best.type });
+        }
 
-const anchor=mindarThree.addAnchor(0);
-const root=anchor.group;
+        // star burst
+        for (let i = 0; i < 14; i++) {
+          const a = Math.random() * Math.PI * 2;
+          stars.push({ x: best.x, y: best.y, vx: Math.cos(a)*0.006, vy: Math.sin(a)*0.006, life: 1.0, decay: 0.02 });
+        }
+      }
 
-/* test neuron */
-const neuron=new THREE.Mesh(
-new THREE.SphereGeometry(0.03,24,24),
-new THREE.MeshStandardMaterial({color:0xffd54a,emissive:0xffd54a})
-);
-root.add(neuron);
+      function colorFor(n) {
+        if (n.type === "attn") return "#c870e8";
+        if (n.type === "inhib") return "#7dcf7d";
+        return "#5a90e0";
+      }
+      function glowFor(n) {
+        if (n.fire > 0) return "#fffacc";
+        return colorFor(n);
+      }
 
-log("starting camera...");
-await mindarThree.start();
+      function stepAndDraw(ctx, w, h) {
+        // clear with transparent bg (so poster shows through)
+        ctx.clearRect(0,0,w,h);
 
-document.getElementById("overlay").style.display="none";
+        // connections
+        ctx.save();
+        ctx.globalAlpha = 0.25;
+        ctx.lineWidth = Math.max(1, Math.round(w*0.0012));
+        ctx.strokeStyle = "#5a90e0";
+        for (const n of neurons) {
+          for (const m of n.connections) {
+            ctx.beginPath();
+            ctx.moveTo(n.x*w, n.y*h);
+            // a little bezier wobble for van-gogh feel
+            const dx = (m.x-n.x)*w, dy=(m.y-n.y)*h;
+            const c1x = n.x*w + dx*0.35 + (Math.random()-0.5)*12;
+            const c1y = n.y*h + dy*0.35 + (Math.random()-0.5)*12;
+            const c2x = n.x*w + dx*0.65 + (Math.random()-0.5)*12;
+            const c2y = n.y*h + dy*0.65 + (Math.random()-0.5)*12;
+            ctx.bezierCurveTo(c1x,c1y,c2x,c2y,m.x*w,m.y*h);
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
 
-renderer.setAnimationLoop(()=>{
-neuron.rotation.y+=0.02;
-renderer.render(scene,camera);
-});
+        // neurons
+        for (const n of neurons) {
+          const x = n.x*w, y = n.y*h;
+          const firing = n.fire > 0;
+          const pulse = firing ? (Math.sin(n.fire*0.35)*0.6+0.4) : 0;
+          const rr = (n.r * (1 + pulse*2.3)) * w;
 
-}catch(e){
-log("ERROR:");
-log(e);
-alert(e);
-}
+          // glow rings
+          for (let ring=4; ring>=1; ring--) {
+            const r2 = rr*(1 + ring*0.9);
+            const g = ctx.createRadialGradient(x,y,0,x,y,r2);
+            g.addColorStop(0, glowFor(n) + (firing ? "AA" : "66"));
+            g.addColorStop(1, "transparent");
+            ctx.globalAlpha = 0.65;
+            ctx.fillStyle = g;
+            ctx.beginPath(); ctx.arc(x,y,r2,0,Math.PI*2); ctx.fill();
+          }
+          ctx.globalAlpha = 1;
 
-};
-</script>
+          // core blobs
+          const base = firing ? "#ffd966" : colorFor(n);
+          for (let i=0;i<5;i++){
+            ctx.globalAlpha = 0.7 + Math.random()*0.25;
+            ctx.fillStyle = base;
+            ctx.beginPath();
+            ctx.arc(x+(Math.random()-0.5)*rr*0.6, y+(Math.random()-0.5)*rr*0.6, rr*(0.45+Math.random()*0.55), 0, Math.PI*2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
 
+          if (n.fire > 0) n.fire--;
+        }
+
+        // signals
+        for (let i=signals.length-1;i>=0;i--){
+          const s = signals[i];
+          s.p += s.speed;
+          const x = (s.from.x + (s.to.x - s.from.x)*s.p) * w;
+          const y = (s.from.y + (s.to.y - s.from.y)*s.p) * h;
+
+          const g = ctx.createRadialGradient(x,y,0,x,y,w*0.02);
+          g.addColorStop(0, "#ffffff");
+          g.addColorStop(0.35, "#ffd966");
+          g.addColorStop(1, "transparent");
+          ctx.globalAlpha = 0.95;
+          ctx.fillStyle = g;
+          ctx.beginPath(); ctx.arc(x,y,w*0.02,0,Math.PI*2); ctx.fill();
+          ctx.globalAlpha = 1;
+
+          if (s.p >= 1) {
+            s.to.fire = Math.max(s.to.fire, 65);
+            signals.splice(i,1);
+          }
+        }
+
+        // star particles
+        for (let i=stars.length-1;i>=0;i--){
+          const p = stars[i];
+          p.x += p.vx; p.y += p.vy;
+          p.life -= p.decay;
+          if (p.life <= 0) { stars.splice(i,1); continue; }
+          ctx.globalAlpha = Math.max(0, p.life);
+          ctx.fillStyle = "#fffacc";
+          ctx.beginPath();
+          ctx.arc(p.x*w, p.y*h, 2 + p.life*4, 0, Math.PI*2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      return { fireAt, stepAndDraw };
+    }
+
+    // ---------- WebAR ----------
+    async function startWebAR() {
+      try {
+        log("Loading local scripts...");
+        await loadScript("vendor/three.min.js?v=3");
+        await loadScript("vendor/mindar-image-three.prod.js?v=3");
+
+        log("THREE loaded? " + !!window.THREE);
+        log("MINDAR loaded? " + !!window.MINDAR);
+
+        if (!window.MINDAR?.IMAGE?.MindARThree) {
+          throw new Error("MindAR not available. Check vendor/mindar-image-three.prod.js path/name.");
+        }
+
+        const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+          container: document.body,
+          imageTargetSrc: "assets/targets.mind",
+          uiLoading: "no",
+          uiScanning: "yes",
+          maxTrack: 1,
+        });
+
+        const { renderer, scene, camera } = mindarThree;
+        scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+
+        // Anchor to your poster target (target index 0)
+        const anchor = mindarThree.addAnchor(0);
+
+        // Poster plane size (tweak if overlay feels stretched)
+        const POSTER_W = 1.0;
+        const POSTER_H = 1.33;
+
+        // Create a transparent canvas that we will draw neurons onto
+        const texCanvas = document.createElement("canvas");
+        texCanvas.width = 768;               // resolution of overlay texture
+        texCanvas.height = Math.round(768 * (POSTER_H/POSTER_W));
+        const texCtx = texCanvas.getContext("2d");
+
+        // Make a THREE texture from that canvas
+        const overlayTex = new THREE.CanvasTexture(texCanvas);
+        overlayTex.minFilter = THREE.LinearFilter;
+        overlayTex.magFilter = THREE.LinearFilter;
+
+        // Plane for overlay (transparent)
+        const overlayMat = new THREE.MeshBasicMaterial({
+          map: overlayTex,
+          transparent: true,
+          opacity: 0.95,
+          depthTest: true,
+        });
+        const overlayPlane = new THREE.Mesh(
+          new THREE.PlaneGeometry(POSTER_W, POSTER_H),
+          overlayMat
+        );
+        overlayPlane.position.set(0,0,0.01); // slightly above poster
+        anchor.group.add(overlayPlane);
+
+        // Simulation
+        const sim = makeNeuralSim();
+
+        // Tap -> raycast -> poster UV -> fire neuron
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+
+        function onTap(e) {
+          const rect = renderer.domElement.getBoundingClientRect();
+          const clientX = (e.touches ? e.touches[0].clientX : e.clientX);
+          const clientY = (e.touches ? e.touches[0].clientY : e.clientY);
+          pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+          pointer.y = -(((clientY - rect.top) / rect.height) * 2 - 1);
+
+          raycaster.setFromCamera(pointer, camera);
+          const hits = raycaster.intersectObject(overlayPlane, true);
+          if (!hits.length) return;
+
+          // UV is 0..1 across the plane
+          const uv = hits[0].uv;
+          if (!uv) return;
+
+          // uv.y is bottom->top; our sim expects y top->bottom, so flip:
+          const u = uv.x;
+          const v = 1 - uv.y;
+
+          sim.fireAt(u, v);
+        }
+
+        window.addEventListener("pointerdown", onTap, { passive: true });
+        window.addEventListener("touchstart", onTap, { passive: true });
+
+        log("Starting camera...");
+        await mindarThree.start();
+        document.getElementById("intro").style.display = "none";
+        log("✅ WebAR started. Point at your poster.");
+
+        const clock = new THREE.Clock();
+
+        renderer.setAnimationLoop(() => {
+          const dt = Math.min(clock.getDelta(), 0.033);
+
+          // draw updated neuron overlay texture
+          sim.stepAndDraw(texCtx, texCanvas.width, texCanvas.height);
+          overlayTex.needsUpdate = true;
+
+          renderer.render(scene, camera);
+        });
+
+      } catch (err) {
+        log("❌ Error:");
+        log(String(err?.stack || err));
+        alert(String(err));
+      }
+    }
+
+    document.getElementById("startBtn").addEventListener("click", startWebAR);
+  </script>
 </body>
 </html>
