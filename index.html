@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
   <title>Neuron WebAR</title>
+
   <style>
     html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; }
     #overlay {
@@ -15,11 +16,12 @@
       font-size: 16px; padding: 12px 16px; border-radius: 12px; border: none;
       background: #2b8cff; color: white;
     }
-    #log { font-size: 12px; opacity:0.85; max-width: 520px; white-space: pre-wrap; }
+    #log { font-size: 12px; opacity:0.9; max-width: 560px; white-space: pre-wrap; text-align:left; }
   </style>
 
-  <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
+  <!-- Use jsDelivr (more reliable than unpkg in some networks) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
 </head>
 
 <body>
@@ -34,17 +36,20 @@
     const logEl = document.getElementById("log");
     const log = (m) => { console.log(m); logEl.textContent += m + "\n"; };
 
-    // Quick sanity checks
     if (location.protocol !== "https:" && location.hostname !== "localhost") {
       log("⚠️ Camera requires HTTPS (or localhost).");
     }
 
-    // Basic AR content (just one glowing dot) so you can confirm camera works first
-    const POSTER_W = 1.0, POSTER_H = 1.33;
-
     async function startAR() {
       try {
         log("Initializing MindAR...");
+        log("three.js loaded? " + !!window.THREE);
+        log("mindar loaded? " + !!window.MINDAR);
+
+        // Hard check: MindAR must exist
+        if (!window.MINDAR || !window.MINDAR.IMAGE || !window.MINDAR.IMAGE.MindARThree) {
+          throw new Error("MindAR failed to load. CDN blocked or script path wrong.");
+        }
 
         const mindarThree = new window.MINDAR.IMAGE.MindARThree({
           container: document.body,
@@ -57,28 +62,19 @@
         const { renderer, scene, camera } = mindarThree;
         scene.add(new THREE.AmbientLight(0xffffff, 1.0));
 
-        // Anchor (your poster target #0)
         const anchor = mindarThree.addAnchor(0);
         const root = anchor.group;
 
-        // Invisible plane to define poster area
-        const plane = new THREE.Mesh(
-          new THREE.PlaneGeometry(POSTER_W, POSTER_H),
-          new THREE.MeshBasicMaterial({ transparent:true, opacity:0.0 })
-        );
-        root.add(plane);
-
-        // One test neuron dot
+        // test dot so we know tracking overlay works
         const dot = new THREE.Mesh(
           new THREE.SphereGeometry(0.02, 24, 24),
           new THREE.MeshStandardMaterial({ color: 0xffd54a, emissive: 0xffd54a, emissiveIntensity: 1.0 })
         );
-        dot.position.set(0, 0, 0);
         root.add(dot);
 
-        log("Requesting camera (starting)...");
+        log("Requesting camera...");
         await mindarThree.start();
-        log("✅ Camera started. Point at your poster to lock.");
+        log("✅ Camera started. Point at the poster.");
 
         document.getElementById("overlay").style.display = "none";
 
@@ -90,11 +86,10 @@
       } catch (err) {
         log("❌ Failed to start AR:");
         log(String(err?.stack || err));
-        alert("AR failed to start. Open console for details.");
+        alert("AR failed. See on-screen log.");
       }
     }
 
-    // MUST start from user gesture on iOS Safari
     document.getElementById("startBtn").addEventListener("click", startAR);
   </script>
 </body>
