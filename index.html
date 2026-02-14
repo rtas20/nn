@@ -1,96 +1,89 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Neuron WebAR</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Neuron WebAR</title>
 
-  <style>
-    html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; }
-    #overlay {
-      position: fixed; inset: 0; display:flex; align-items:center; justify-content:center;
-      background: rgba(0,0,0,0.75); z-index: 9999; color: #fff; font-family: system-ui;
-      flex-direction: column; gap: 12px; text-align:center; padding: 18px;
-    }
-    button {
-      font-size: 16px; padding: 12px 16px; border-radius: 12px; border: none;
-      background: #2b8cff; color: white;
-    }
-    #log { font-size: 12px; opacity:0.9; max-width: 560px; white-space: pre-wrap; text-align:left; }
-  </style>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:sans-serif}
+#overlay{
+position:fixed;inset:0;display:flex;flex-direction:column;
+align-items:center;justify-content:center;background:rgba(0,0,0,.8);
+color:#fff;z-index:10;text-align:center;padding:20px
+}
+button{padding:14px 20px;font-size:18px;border-radius:12px;border:none;background:#2b8cff;color:white}
+#log{margin-top:10px;font-size:12px;opacity:.8;white-space:pre-wrap}
+</style>
 
-  <!-- Use jsDelivr (more reliable than unpkg in some networks) -->
-  <script defer src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
+<!-- LOCAL FILES (NO CDN) -->
+<script defer src="vendor/three.min.js"></script>
+<script defer src="vendor/mindar-image-three.prod.js"></script>
 </head>
 
 <body>
-  <div id="overlay">
-    <div><b>Neuron WebAR</b></div>
-    <div style="opacity:.9">Tap Start, then allow Camera permission.</div>
-    <button id="startBtn">Start AR</button>
-    <div id="log"></div>
-  </div>
 
-  <script>
-    const logEl = document.getElementById("log");
-    const log = (m) => { console.log(m); logEl.textContent += m + "\n"; };
+<div id="overlay">
+<h2>Neuron WebAR</h2>
+Tap Start → allow camera → point at poster
+<br><br>
+<button id="start">Start AR</button>
+<div id="log"></div>
+</div>
 
-    if (location.protocol !== "https:" && location.hostname !== "localhost") {
-      log("⚠️ Camera requires HTTPS (or localhost).");
-    }
+<script>
+const log=(t)=>document.getElementById("log").textContent+=t+"\n";
 
-    async function startAR() {
-      try {
-        log("Initializing MindAR...");
-        log("three.js loaded? " + !!window.THREE);
-        log("mindar loaded? " + !!window.MINDAR);
+document.getElementById("start").onclick=async()=>{
 
-        // Hard check: MindAR must exist
-        if (!window.MINDAR || !window.MINDAR.IMAGE || !window.MINDAR.IMAGE.MindARThree) {
-          throw new Error("MindAR failed to load. CDN blocked or script path wrong.");
-        }
+try{
+log("checking libs...");
+log("THREE = "+!!window.THREE);
+log("MINDAR = "+!!window.MINDAR);
 
-        const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-          container: document.body,
-          imageTargetSrc: "assets/targets.mind",
-          maxTrack: 1,
-          uiLoading: "no",
-          uiScanning: "yes",
-        });
+if(!window.MINDAR){
+throw "MindAR not loaded — vendor file missing or wrong path";
+}
 
-        const { renderer, scene, camera } = mindarThree;
-        scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+const mindarThree=new window.MINDAR.IMAGE.MindARThree({
+container:document.body,
+imageTargetSrc:"assets/targets.mind",
+uiLoading:"no",
+uiScanning:"yes"
+});
 
-        const anchor = mindarThree.addAnchor(0);
-        const root = anchor.group;
+const{renderer,scene,camera}=mindarThree;
 
-        // test dot so we know tracking overlay works
-        const dot = new THREE.Mesh(
-          new THREE.SphereGeometry(0.02, 24, 24),
-          new THREE.MeshStandardMaterial({ color: 0xffd54a, emissive: 0xffd54a, emissiveIntensity: 1.0 })
-        );
-        root.add(dot);
+scene.add(new THREE.AmbientLight(0xffffff,1));
 
-        log("Requesting camera...");
-        await mindarThree.start();
-        log("✅ Camera started. Point at the poster.");
+const anchor=mindarThree.addAnchor(0);
+const root=anchor.group;
 
-        document.getElementById("overlay").style.display = "none";
+/* test neuron */
+const neuron=new THREE.Mesh(
+new THREE.SphereGeometry(0.03,24,24),
+new THREE.MeshStandardMaterial({color:0xffd54a,emissive:0xffd54a})
+);
+root.add(neuron);
 
-        renderer.setAnimationLoop(() => {
-          dot.rotation.y += 0.01;
-          renderer.render(scene, camera);
-        });
+log("starting camera...");
+await mindarThree.start();
 
-      } catch (err) {
-        log("❌ Failed to start AR:");
-        log(String(err?.stack || err));
-        alert("AR failed. See on-screen log.");
-      }
-    }
+document.getElementById("overlay").style.display="none";
 
-    document.getElementById("startBtn").addEventListener("click", startAR);
-  </script>
+renderer.setAnimationLoop(()=>{
+neuron.rotation.y+=0.02;
+renderer.render(scene,camera);
+});
+
+}catch(e){
+log("ERROR:");
+log(e);
+alert(e);
+}
+
+};
+</script>
+
 </body>
 </html>
