@@ -1,263 +1,1064 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>The Neural Night — WebAR</title>
-  <style>
-    html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:system-ui}
-    #intro{
-      position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;gap:12px;text-align:center;
-      background:radial-gradient(ellipse at center,#0d1520,#040608);color:#fff;padding:18px
-    }
-    #intro h1{margin:0;font-size:28px;letter-spacing:.08em;text-transform:uppercase}
-    #intro p{margin:0;opacity:.85;max-width:560px;line-height:1.5}
-    #startBtn{padding:14px 18px;border:none;border-radius:12px;background:#2b8cff;color:#fff;font-size:16px}
-    #log{margin-top:10px;font-size:12px;opacity:.85;white-space:pre-wrap;text-align:left;max-width:720px}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Neural Night - Interactive AI</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-  <!-- ES MODULE IMPORTS (MindAR v1.2+ way) -->
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-      "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
-    }
-  }
-  </script>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background: #0a0e1a;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ========== WELCOME SCREEN ========== */
+        #welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0e27, #1a1f3a);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 20px;
+            transition: opacity 0.5s ease;
+        }
+
+        #welcome-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .title {
+            font-size: clamp(28px, 6vw, 40px);
+            font-weight: 800;
+            background: linear-gradient(135deg, #4FC3F7, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: clamp(14px, 3vw, 18px);
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            max-width: 90%;
+            width: 400px;
+            margin-bottom: 30px;
+        }
+
+        .instruction-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .instruction-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-num {
+            min-width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .step-text {
+            color: white;
+            font-size: 14px;
+            line-height: 1.5;
+            padding-top: 4px;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 16px 48px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+            transition: transform 0.3s ease;
+        }
+
+        .start-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* ========== AR INTERFACE ========== */
+        #ar-interface {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+        }
+
+        #ar-interface.active {
+            display: block;
+        }
+
+        /* Exit Button */
+        #exit-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 44px;
+            height: 44px;
+            background: rgba(239, 68, 68, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            cursor: pointer;
+            z-index: 10001;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+        }
+
+        #exit-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* Instructions Overlay */
+        #instructions-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: opacity 0.3s ease;
+        }
+
+        #instructions-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .instructions-card {
+            background: rgba(15, 15, 30, 0.95);
+            border: 2px solid rgba(79, 195, 247, 0.4);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 90%;
+            width: 400px;
+            text-align: center;
+        }
+
+        .instructions-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #4FC3F7;
+            margin-bottom: 20px;
+        }
+
+        .instructions-list {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .scanning-animation {
+            width: 120px;
+            height: 120px;
+            margin: 20px auto;
+            position: relative;
+        }
+
+        .scan-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid #4FC3F7;
+            border-radius: 50%;
+            animation: scanPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes scanPulse {
+            0%, 100% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1); opacity: 1; }
+        }
+
+        .scan-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+        }
+
+        /* Text Input */
+        #text-input-panel {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            right: 70px;
+            background: rgba(10, 10, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(79, 195, 247, 0.4);
+            border-radius: 12px;
+            padding: 12px;
+            display: none;
+            pointer-events: auto;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        #text-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        #text-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        #send-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        #send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .quick-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 4px 10px;
+            font-size: 11px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chip:active {
+            background: rgba(79, 195, 247, 0.3);
+            transform: scale(0.95);
+        }
+
+        /* Layer Info */
+        #layer-info {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            right: 15px;
+            background: rgba(10, 10, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(79, 195, 247, 0.4);
+            border-radius: 12px;
+            padding: 12px;
+            display: none;
+        }
+
+        .layer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .layer-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: #4FC3F7;
+            text-transform: uppercase;
+        }
+
+        .layer-status {
+            font-size: 11px;
+            color: #FFD700;
+            font-weight: 600;
+        }
+
+        .layer-desc {
+            font-size: 13px;
+            color: white;
+            line-height: 1.4;
+        }
+
+        /* Responsive adjustments */
+        @media (orientation: landscape) {
+            #text-input-panel {
+                max-width: 400px;
+            }
+
+            #layer-info {
+                max-width: 400px;
+                left: auto;
+                right: 15px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .title {
+                font-size: 32px;
+            }
+
+            .instructions {
+                padding: 15px;
+            }
+
+            .step-text {
+                font-size: 13px;
+            }
+        }
+    </style>
 </head>
-
 <body>
-  <div id="intro">
-    <h1>The Neural Night</h1>
-    <p>Point camera at the poster. Tap to fire a neuron and watch signals travel.</p>
-    <button id="startBtn">Start WebAR</button>
-    <div id="log"></div>
-  </div>
+    <!-- Welcome Screen -->
+    <div id="welcome-screen">
+        <div class="logo">🧠</div>
+        <div class="title">Neural Night</div>
+        <div class="subtitle">Watch AI Process Your Thoughts</div>
+        
+        <div class="instructions">
+            <div class="instruction-item">
+                <div class="step-num">1</div>
+                <div class="step-text">Point your camera at the Neural Night poster</div>
+            </div>
+            <div class="instruction-item">
+                <div class="step-num">2</div>
+                <div class="step-text">Type any text and watch it flow through neurons</div>
+            </div>
+            <div class="instruction-item">
+                <div class="step-num">3</div>
+                <div class="step-text">Tap neurons to activate them individually</div>
+            </div>
+            <div class="instruction-item">
+                <div class="step-num">4</div>
+                <div class="step-text">See glowing words travel from left to right</div>
+            </div>
+        </div>
 
-  <script type="module">
-    import * as THREE from "three";
-    import { MindARThree } from "mindar-image-three";
+        <button class="start-btn" id="start-btn">Launch Experience</button>
+    </div>
 
-    const logEl = document.getElementById("log");
-    const log = (m) => { console.log(m); logEl.textContent += m + "\n"; };
+    <!-- AR Interface -->
+    <div id="ar-interface">
+        <!-- Exit Button -->
+        <div id="exit-btn">
+            <span style="font-size: 20px; color: white; font-weight: bold;">✕</span>
+        </div>
 
-    // --- Neural overlay simulation (draw to canvas texture) ---
-    function makeNeuralSim() {
-      const neurons = [];
-      const signals = [];
-      const stars = [];
-      const N = 90;
+        <!-- Instructions Overlay (shows until target found) -->
+        <div id="instructions-overlay">
+            <div class="instructions-card">
+                <div class="instructions-title">🎯 Find the Poster</div>
+                
+                <div class="scanning-animation">
+                    <div class="scan-ring"></div>
+                    <div class="scan-icon">📱</div>
+                </div>
+                
+                <div class="instructions-list">
+                    <div class="instruction-item">
+                        <div class="step-num">1</div>
+                        <div class="step-text">Hold phone steady and point at Neural Night poster</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="step-num">2</div>
+                        <div class="step-text">Make sure poster is well-lit and fully visible</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="step-num">3</div>
+                        <div class="step-text">Keep camera about 1-2 feet away</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-      for (let i=0;i<N;i++){
-        neurons.push({
-          x: Math.random(), y: Math.random(),
-          r: 0.006 + Math.random()*0.015,
-          fire: 0,
-          type: Math.random()<0.13 ? "attn" : (Math.random()<0.16 ? "inhib" : "excit"),
-          connections: []
-        });
-      }
-      for (const n of neurons){
-        for (const m of neurons){
-          if (n===m) continue;
-          const d = Math.hypot(n.x-m.x, n.y-m.y);
-          if (d<0.18 && Math.random()<0.22) n.connections.push(m);
-        }
-      }
+        <!-- Text Input Panel -->
+        <div id="text-input-panel">
+            <div class="input-wrapper">
+                <input type="text" id="text-input" placeholder="Type your thought..." maxlength="50">
+                <button id="send-btn">Send</button>
+            </div>
+            <div class="quick-chips">
+                <div class="chip" data-text="Starry night sky">Starry night sky</div>
+                <div class="chip" data-text="Dream of colors">Dream of colors</div>
+                <div class="chip" data-text="Paint the universe">Paint the universe</div>
+                <div class="chip" data-text="Swirling thoughts">Swirling thoughts</div>
+                <div class="chip" data-text="Infinite creativity">Infinite creativity</div>
+            </div>
+        </div>
 
-      const colorFor = (t) => t==="attn" ? "#c870e8" : (t==="inhib" ? "#7dcf7d" : "#5a90e0");
+        <!-- Layer Info -->
+        <div id="layer-info">
+            <div class="layer-header">
+                <div class="layer-name" id="current-layer">Embedding Layer</div>
+                <div class="layer-status" id="layer-status">Ready</div>
+            </div>
+            <div class="layer-desc" id="layer-desc">Converts words into numerical representations</div>
+        </div>
+    </div>
 
-      function fireAt(u,v){
-        let best=null, bd=1e9;
-        for (const n of neurons){
-          const d = Math.hypot(n.x-u, n.y-v);
-          if (d<bd){ bd=d; best=n; }
-        }
-        if (!best || bd>0.12) return;
+    <!-- A-Frame Scene -->
+    <a-scene
+        mindar-image="imageTargetSrc: ./assets/targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;"
+        embedded
+        renderer="colorManagement: true; antialias: true; alpha: true; precision: medium;"
+        vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false">
 
-        best.fire = 90;
-        const outs = best.connections.slice(0,5);
-        for (const to of outs) signals.push({from:best, to, p:0, speed:0.035});
+        <a-assets>
+            <audio id="ambient-audio" src="./audio/neural-ambience.mp3" preload="auto" loop></audio>
+        </a-assets>
 
-        for (let i=0;i<14;i++){
-          const a=Math.random()*Math.PI*2;
-          stars.push({x:best.x,y:best.y,vx:Math.cos(a)*0.006,vy:Math.sin(a)*0.006,life:1,decay:0.02});
-        }
-      }
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      function stepAndDraw(ctx,w,h){
-        ctx.clearRect(0,0,w,h);
+        <a-entity id="target" mindar-image-target="targetIndex: 0">
+            <a-entity id="network-container" position="0 0 0"></a-entity>
+        </a-entity>
+    </a-scene>
 
-        // connections
-        ctx.save();
-        ctx.globalAlpha=0.25;
-        ctx.lineWidth=Math.max(1,Math.round(w*0.0012));
-        ctx.strokeStyle="#5a90e0";
-        for (const n of neurons){
-          for (const m of n.connections){
-            const x1=n.x*w,y1=n.y*h,x2=m.x*w,y2=m.y*h;
-            const dx=x2-x1, dy=y2-y1;
-            ctx.beginPath();
-            ctx.moveTo(x1,y1);
-            ctx.bezierCurveTo(
-              x1+dx*0.35+(Math.random()-0.5)*12, y1+dy*0.35+(Math.random()-0.5)*12,
-              x1+dx*0.65+(Math.random()-0.5)*12, y1+dy*0.65+(Math.random()-0.5)*12,
-              x2,y2
-            );
-            ctx.stroke();
-          }
-        }
-        ctx.restore();
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        
+        const CONFIG = {
+            // 6 Layers: Embedding → Attention → FFN → Norm → Attention2 → Output
+            layers: [
+                { name: "Embedding", neurons: 6, x: -1.5, color: "#FFD700", desc: "Converts words into numerical vectors" },
+                { name: "Attention-1", neurons: 10, x: -0.9, color: "#4FC3F7", desc: "Finds relationships between words" },
+                { name: "Feed-Forward", neurons: 12, x: -0.3, color: "#FF69B4", desc: "Deep pattern transformation" },
+                { name: "Normalization", neurons: 8, x: 0.3, color: "#9C27B0", desc: "Stabilizes neural signals" },
+                { name: "Attention-2", neurons: 10, x: 0.9, color: "#00BCD4", desc: "Refines word understanding" },
+                { name: "Output", neurons: 6, x: 1.5, color: "#00FF88", desc: "Generates final result" }
+            ],
+            neuronRadius: 0.08,
+            glowRadius: 0.15,
+            connectionOpacity: 0.15,
+            signalSpeed: 1200
+        };
 
-        // neurons
-        for (const n of neurons){
-          const x=n.x*w,y=n.y*h;
-          const firing=n.fire>0;
-          const pulse=firing?(Math.sin(n.fire*0.35)*0.6+0.4):0;
-          const rr=(n.r*(1+pulse*2.3))*w;
+        const state = {
+            arActive: false,
+            targetFound: false,
+            processing: false,
+            neurons: [],
+            connections: [],
+            sceneReady: false
+        };
 
-          const base = firing ? "#ffd966" : colorFor(n.type);
-          const glow = firing ? "#fffacc" : base;
+        // ============================================
+        // INITIALIZATION
+        // ============================================
 
-          for (let ring=4; ring>=1; ring--){
-            const r2=rr*(1+ring*0.9);
-            const g=ctx.createRadialGradient(x,y,0,x,y,r2);
-            g.addColorStop(0, glow+(firing?"AA":"66"));
-            g.addColorStop(1,"transparent");
-            ctx.globalAlpha=0.65;
-            ctx.fillStyle=g;
-            ctx.beginPath(); ctx.arc(x,y,r2,0,Math.PI*2); ctx.fill();
-          }
-          ctx.globalAlpha=1;
-
-          for (let i=0;i<5;i++){
-            ctx.globalAlpha=0.7+Math.random()*0.25;
-            ctx.fillStyle=base;
-            ctx.beginPath();
-            ctx.arc(x+(Math.random()-0.5)*rr*0.6, y+(Math.random()-0.5)*rr*0.6, rr*(0.45+Math.random()*0.55), 0, Math.PI*2);
-            ctx.fill();
-          }
-          ctx.globalAlpha=1;
-
-          if (n.fire>0) n.fire--;
-        }
-
-        // signals
-        for (let i=signals.length-1;i>=0;i--){
-          const s=signals[i];
-          s.p+=s.speed;
-          const x=(s.from.x+(s.to.x-s.from.x)*s.p)*w;
-          const y=(s.from.y+(s.to.y-s.from.y)*s.p)*h;
-
-          const g=ctx.createRadialGradient(x,y,0,x,y,w*0.02);
-          g.addColorStop(0,"#ffffff");
-          g.addColorStop(0.35,"#ffd966");
-          g.addColorStop(1,"transparent");
-          ctx.globalAlpha=0.95;
-          ctx.fillStyle=g;
-          ctx.beginPath(); ctx.arc(x,y,w*0.02,0,Math.PI*2); ctx.fill();
-          ctx.globalAlpha=1;
-
-          if (s.p>=1){
-            s.to.fire=Math.max(s.to.fire,65);
-            signals.splice(i,1);
-          }
-        }
-
-        // stars
-        for (let i=stars.length-1;i>=0;i--){
-          const p=stars[i];
-          p.x+=p.vx; p.y+=p.vy; p.life-=p.decay;
-          if (p.life<=0){ stars.splice(i,1); continue; }
-          ctx.globalAlpha=Math.max(0,p.life);
-          ctx.fillStyle="#fffacc";
-          ctx.beginPath(); ctx.arc(p.x*w,p.y*h,2+p.life*4,0,Math.PI*2); ctx.fill();
-          ctx.globalAlpha=1;
-        }
-      }
-
-      return { fireAt, stepAndDraw };
-    }
-
-    async function startWebAR(){
-      try{
-        log("Creating MindARThree...");
-        const mindarThree = new MindARThree({
-          container: document.body,
-          imageTargetSrc: "assets/targets.mind",
-          uiLoading: "no",
-          uiScanning: "yes",
-          maxTrack: 1
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
         });
 
-        const { renderer, scene, camera } = mindarThree;
-        scene.add(new THREE.AmbientLight(0xffffff, 1));
+        function setupEventListeners() {
+            // Start button
+            document.getElementById('start-btn').addEventListener('click', handleStart);
+            document.getElementById('start-btn').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                handleStart();
+            });
 
-        const anchor = mindarThree.addAnchor(0);
+            // Exit button
+            const exitBtn = document.getElementById('exit-btn');
+            exitBtn.addEventListener('click', handleExit);
+            exitBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleExit();
+            });
 
-        const POSTER_W=1.0, POSTER_H=1.33;
+            // Text input
+            document.getElementById('send-btn').addEventListener('click', processInput);
+            document.getElementById('text-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') processInput();
+            });
 
-        const texCanvas=document.createElement("canvas");
-        texCanvas.width=768;
-        texCanvas.height=Math.round(768*(POSTER_H/POSTER_W));
-        const texCtx=texCanvas.getContext("2d");
+            // Quick chips
+            document.querySelectorAll('.chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    document.getElementById('text-input').value = chip.dataset.text;
+                    processInput();
+                });
+            });
 
-        const overlayTex=new THREE.CanvasTexture(texCanvas);
-        overlayTex.minFilter=THREE.LinearFilter;
-        overlayTex.magFilter=THREE.LinearFilter;
+            // AR events
+            const target = document.querySelector('#target');
+            target.addEventListener('targetFound', onTargetFound);
+            target.addEventListener('targetLost', onTargetLost);
 
-        const overlayPlane=new THREE.Mesh(
-          new THREE.PlaneGeometry(POSTER_W,POSTER_H),
-          new THREE.MeshBasicMaterial({ map: overlayTex, transparent:true, opacity:0.95 })
-        );
-        overlayPlane.position.set(0,0,0.01);
-        anchor.group.add(overlayPlane);
-
-        const sim = makeNeuralSim();
-
-        // Tap -> raycast -> uv -> fire
-        const raycaster=new THREE.Raycaster();
-        const pointer=new THREE.Vector2();
-
-        function onTap(e){
-          const rect=renderer.domElement.getBoundingClientRect();
-          const cx=(e.touches?e.touches[0].clientX:e.clientX);
-          const cy=(e.touches?e.touches[0].clientY:e.clientY);
-          pointer.x=((cx-rect.left)/rect.width)*2-1;
-          pointer.y=-(((cy-rect.top)/rect.height)*2-1);
-
-          raycaster.setFromCamera(pointer,camera);
-          const hits=raycaster.intersectObject(overlayPlane,true);
-          if(!hits.length || !hits[0].uv) return;
-
-          const u=hits[0].uv.x;
-          const v=1-hits[0].uv.y; // flip
-          sim.fireAt(u,v);
+            // Scene ready
+            const scene = document.querySelector('a-scene');
+            scene.addEventListener('loaded', () => {
+                console.log('Scene loaded');
+                state.sceneReady = true;
+            });
         }
-        window.addEventListener("pointerdown", onTap, {passive:true});
-        window.addEventListener("touchstart", onTap, {passive:true});
 
-        log("Starting camera...");
-        await mindarThree.start();
-        document.getElementById("intro").style.display="none";
-        log("✅ Started. Point at poster and tap.");
+        function handleStart() {
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('ar-interface').classList.add('active');
+            
+            const scene = document.querySelector('a-scene');
+            if (state.sceneReady) {
+                startAR();
+            } else {
+                scene.addEventListener('loaded', startAR, { once: true });
+            }
+        }
 
-        renderer.setAnimationLoop(()=>{
-          sim.stepAndDraw(texCtx, texCanvas.width, texCanvas.height);
-          overlayTex.needsUpdate=true;
-          renderer.render(scene,camera);
-        });
+        function startAR() {
+            const arSystem = document.querySelector('a-scene').systems['mindar-image-system'];
+            if (arSystem && !state.arActive) {
+                arSystem.start().then(() => {
+                    console.log('✅ AR started');
+                    state.arActive = true;
+                }).catch((error) => {
+                    console.error('❌ AR error:', error);
+                    alert('Camera permission required. Please allow camera access and try again.');
+                    handleExit();
+                });
+            }
+        }
 
-      } catch(e){
-        log("❌ "+String(e?.stack||e));
-        alert(String(e));
-      }
-    }
+        function handleExit() {
+            if (state.arActive) {
+                const arSystem = document.querySelector('a-scene').systems['mindar-image-system'];
+                if (arSystem) arSystem.stop();
+                state.arActive = false;
+            }
+            
+            document.getElementById('ar-interface').classList.remove('active');
+            document.getElementById('welcome-screen').classList.remove('hidden');
+            
+            // Reset state
+            state.targetFound = false;
+            state.processing = false;
+        }
 
-    document.getElementById("startBtn").addEventListener("click", startWebAR);
-  </script>
+        // ============================================
+        // TARGET DETECTION
+        // ============================================
+
+        function onTargetFound() {
+            console.log('🎯 Target found!');
+            state.targetFound = true;
+            
+            // Hide instructions overlay
+            document.getElementById('instructions-overlay').classList.add('hidden');
+            
+            // Show controls
+            document.getElementById('text-input-panel').style.display = 'block';
+            document.getElementById('layer-info').style.display = 'block';
+            
+            // Create network
+            createNetwork();
+            
+            // Auto demo
+            setTimeout(() => {
+                document.getElementById('text-input').value = 'Dream of colors';
+                processInput();
+            }, 1000);
+            
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 50, 100]);
+            }
+        }
+
+        function onTargetLost() {
+            console.log('👋 Target lost');
+            state.targetFound = false;
+            
+            // Show instructions overlay again
+            document.getElementById('instructions-overlay').classList.remove('hidden');
+            
+            // Hide controls
+            document.getElementById('text-input-panel').style.display = 'none';
+            document.getElementById('layer-info').style.display = 'none';
+        }
+
+        // ============================================
+        // NETWORK CREATION
+        // ============================================
+
+        function createNetwork() {
+            const container = document.getElementById('network-container');
+            container.innerHTML = '';
+            state.neurons = [];
+            state.connections = [];
+
+            // Get viewport aspect ratio for adaptive scaling
+            const aspect = window.innerWidth / window.innerHeight;
+            const isLandscape = aspect > 1;
+            const scale = isLandscape ? 1 : 0.8;
+            
+            container.setAttribute('scale', `${scale} ${scale} ${scale}`);
+
+            // Create layers (left to right, horizontal)
+            CONFIG.layers.forEach((layerConfig, layerIdx) => {
+                const layerNeurons = [];
+                const spacing = 0.25;
+                const totalHeight = (layerConfig.neurons - 1) * spacing;
+                
+                for (let i = 0; i < layerConfig.neurons; i++) {
+                    const x = layerConfig.x;
+                    const y = (i * spacing) - (totalHeight / 2);
+                    const z = 0;
+                    
+                    const neuron = createNeuron(x, y, z, layerConfig.color, layerIdx, i);
+                    container.appendChild(neuron);
+                    
+                    layerNeurons.push({
+                        element: neuron,
+                        position: { x, y, z },
+                        color: layerConfig.color,
+                        layer: layerIdx,
+                        index: i
+                    });
+                }
+                
+                state.neurons.push(layerNeurons);
+            });
+
+            // Create connections
+            for (let l = 0; l < state.neurons.length - 1; l++) {
+                const currentLayer = state.neurons[l];
+                const nextLayer = state.neurons[l + 1];
+                
+                currentLayer.forEach((start) => {
+                    nextLayer.forEach((end) => {
+                        // Attention layers have more connections
+                        const isAttention = CONFIG.layers[l].name.includes('Attention') || 
+                                          CONFIG.layers[l + 1].name.includes('Attention');
+                        const probability = isAttention ? 0.5 : 0.3;
+                        
+                        if (Math.random() < probability) {
+                            const conn = createConnection(start.position, end.position);
+                            container.appendChild(conn);
+                            state.connections.push({ element: conn, start, end });
+                        }
+                    });
+                });
+            }
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                const aspect = window.innerWidth / window.innerHeight;
+                const isLandscape = aspect > 1;
+                const scale = isLandscape ? 1 : 0.8;
+                container.setAttribute('scale', `${scale} ${scale} ${scale}`);
+            });
+        }
+
+        function createNeuron(x, y, z, color, layer, index) {
+            const neuron = document.createElement('a-entity');
+            neuron.setAttribute('position', `${x} ${y} ${z}`);
+            neuron.setAttribute('data-layer', layer);
+            neuron.setAttribute('data-index', index);
+            neuron.setAttribute('class', 'neuron');
+
+            // Main sphere (like the image - solid colored sphere)
+            const sphere = document.createElement('a-sphere');
+            sphere.setAttribute('radius', CONFIG.neuronRadius);
+            sphere.setAttribute('material', `
+                shader: standard;
+                color: ${color};
+                metalness: 0.5;
+                roughness: 0.3;
+                emissive: ${color};
+                emissiveIntensity: 0.6;
+            `);
+
+            // Outer glow (soft halo like in the image)
+            const glow = document.createElement('a-sphere');
+            glow.setAttribute('radius', CONFIG.glowRadius);
+            glow.setAttribute('material', `
+                shader: flat;
+                color: ${color};
+                transparent: true;
+                opacity: 0.2;
+            `);
+
+            // Small sparkles around neuron
+            for (let i = 0; i < 4; i++) {
+                const angle = (i / 4) * Math.PI * 2;
+                const dist = CONFIG.neuronRadius * 1.8;
+                const sparkle = document.createElement('a-sphere');
+                sparkle.setAttribute('radius', '0.015');
+                sparkle.setAttribute('position', `${Math.cos(angle) * dist} ${Math.sin(angle) * dist} 0`);
+                sparkle.setAttribute('material', `
+                    shader: flat;
+                    color: ${color};
+                    emissive: ${color};
+                    emissiveIntensity: 2;
+                `);
+                sphere.appendChild(sparkle);
+            }
+
+            sphere.appendChild(glow);
+            neuron.appendChild(sphere);
+
+            // Make interactive (tap to activate)
+            neuron.addEventListener('click', () => {
+                if (state.targetFound) {
+                    activateNeuron(neuron, color);
+                }
+            });
+
+            return neuron;
+        }
+
+        function createConnection(start, end) {
+            const dx = end.x - start.x;
+            const dy = end.y - start.y;
+            const dz = end.z - start.z;
+            const distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+            
+            const midX = (start.x + end.x) / 2;
+            const midY = (start.y + end.y) / 2;
+            const midZ = (start.z + end.z) / 2;
+            
+            const line = document.createElement('a-cylinder');
+            line.setAttribute('radius', '0.005');
+            line.setAttribute('height', distance);
+            line.setAttribute('material', `
+                shader: flat;
+                color: #4FC3F7;
+                transparent: true;
+                opacity: ${CONFIG.connectionOpacity};
+            `);
+            line.setAttribute('position', `${midX} ${midY} ${midZ}`);
+            
+            const rotY = Math.atan2(dx, dz) * 180 / Math.PI;
+            const rotX = Math.atan2(Math.sqrt(dx*dx + dz*dz), dy) * 180 / Math.PI - 90;
+            line.setAttribute('rotation', `${rotX} ${rotY} 0`);
+            
+            return line;
+        }
+
+        // ============================================
+        // PROCESSING & ANIMATION
+        // ============================================
+
+        function processInput() {
+            const text = document.getElementById('text-input').value.trim();
+            if (!text || !state.targetFound || state.processing) return;
+            
+            state.processing = true;
+            
+            const words = text.split(/\s+/).filter(w => w.length > 0);
+            
+            // Process through all layers
+            let delay = 0;
+            CONFIG.layers.forEach((layer, idx) => {
+                setTimeout(() => {
+                    updateLayerInfo(idx);
+                    animateLayer(idx, words);
+                    
+                    if (idx < CONFIG.layers.length - 1) {
+                        setTimeout(() => {
+                            propagateWords(idx, words);
+                        }, 600);
+                    }
+                }, delay);
+                
+                delay += 1500;
+            });
+            
+            setTimeout(() => {
+                state.processing = false;
+            }, delay + 500);
+        }
+
+        function updateLayerInfo(layerIdx) {
+            const layer = CONFIG.layers[layerIdx];
+            document.getElementById('current-layer').textContent = layer.name;
+            document.getElementById('layer-status').textContent = 'Active';
+            document.getElementById('layer-desc').textContent = layer.desc;
+            
+            setTimeout(() => {
+                document.getElementById('layer-status').textContent = 'Ready';
+            }, 1400);
+        }
+
+        function animateLayer(layerIdx, words) {
+            const neurons = state.neurons[layerIdx];
+            
+            neurons.forEach((neuron, idx) => {
+                setTimeout(() => {
+                    activateNeuron(neuron.element, neuron.color);
+                }, idx * 80);
+            });
+        }
+
+        function activateNeuron(neuronElement, color) {
+            const sphere = neuronElement.querySelector('a-sphere');
+            const glow = sphere.querySelector('a-sphere');
+            
+            // Scale pulse animation
+            anime({
+                targets: neuronElement.object3D.scale,
+                x: [1, 1.5, 1],
+                y: [1, 1.5, 1],
+                z: [1, 1.5, 1],
+                duration: 600,
+                easing: 'easeInOutQuad'
+            });
+            
+            // Enhanced emissive flash with glow
+            sphere.setAttribute('material', `emissive: ${color}; emissiveIntensity: 3.5`);
+            glow.setAttribute('material', `opacity: 0.6`);
+            
+            setTimeout(() => {
+                sphere.setAttribute('material', `emissive: ${color}; emissiveIntensity: 0.6`);
+                glow.setAttribute('material', `opacity: 0.2`);
+            }, 400);
+            
+            // Pulse glow animation
+            anime({
+                targets: glow.object3D.scale,
+                x: [1, 1.8, 1],
+                y: [1, 1.8, 1],
+                z: [1, 1.8, 1],
+                duration: 600,
+                easing: 'easeInOutQuad'
+            });
+        }
+
+        function propagateWords(sourceLayerIdx, words) {
+            const sourceLayer = state.neurons[sourceLayerIdx];
+            const targetLayer = state.neurons[sourceLayerIdx + 1];
+            
+            words.forEach((word, wordIdx) => {
+                setTimeout(() => {
+                    const numPaths = Math.min(3, targetLayer.length);
+                    
+                    for (let p = 0; p < numPaths; p++) {
+                        setTimeout(() => {
+                            const source = sourceLayer[Math.floor(Math.random() * sourceLayer.length)];
+                            const target = targetLayer[Math.floor(Math.random() * targetLayer.length)];
+                            
+                            createWordSignal(source.position, target.position, word, source.color, target.color);
+                        }, p * 150);
+                    }
+                }, wordIdx * 250);
+            });
+        }
+
+        function createWordSignal(start, end, word, startColor, endColor) {
+            const container = document.getElementById('network-container');
+            
+            const signal = document.createElement('a-entity');
+            signal.setAttribute('position', `${start.x} ${start.y} ${start.z}`);
+            
+            // Glowing background plate with gradient effect
+            const bgGlow = document.createElement('a-plane');
+            bgGlow.setAttribute('width', '0.35');
+            bgGlow.setAttribute('height', '0.12');
+            bgGlow.setAttribute('color', startColor);
+            bgGlow.setAttribute('material', `
+                shader: flat;
+                transparent: true;
+                opacity: 0.7;
+                emissive: ${startColor};
+                emissiveIntensity: 2;
+            `);
+            bgGlow.setAttribute('look-at', '[camera]');
+            
+            // Word text with glow
+            const text = document.createElement('a-text');
+            text.setAttribute('value', word);
+            text.setAttribute('align', 'center');
+            text.setAttribute('width', '0.6');
+            text.setAttribute('color', '#FFFFFF');
+            text.setAttribute('shader', 'flat');
+            text.setAttribute('look-at', '[camera]');
+            text.setAttribute('position', '0 0 0.01');
+            
+            // Outer glow ring
+            const glowRing = document.createElement('a-ring');
+            glowRing.setAttribute('radius-inner', '0.15');
+            glowRing.setAttribute('radius-outer', '0.2');
+            glowRing.setAttribute('color', startColor);
+            glowRing.setAttribute('material', `
+                shader: flat;
+                transparent: true;
+                opacity: 0.4;
+                side: double;
+            `);
+            glowRing.setAttribute('look-at', '[camera]');
+            
+            signal.appendChild(glowRing);
+            signal.appendChild(bgGlow);
+            signal.appendChild(text);
+            container.appendChild(signal);
+            
+            // Animate movement with color transition
+            anime({
+                targets: signal.object3D.position,
+                x: end.x,
+                y: end.y,
+                z: end.z,
+                duration: CONFIG.signalSpeed,
+                easing: 'easeInOutQuad',
+                complete: () => {
+                    container.removeChild(signal);
+                }
+            });
+            
+            // Color transition animation
+            const colorFrames = [];
+            const steps = 20;
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                colorFrames.push({
+                    color: lerpColor(startColor, endColor, t),
+                    progress: t
+                });
+            }
+            
+            let currentFrame = 0;
+            const colorInterval = setInterval(() => {
+                if (currentFrame >= colorFrames.length) {
+                    clearInterval(colorInterval);
+                    return;
+                }
+                
+                const frame = colorFrames[currentFrame];
+                bgGlow.setAttribute('material', `
+                    color: ${frame.color};
+                    emissive: ${frame.color};
+                    emissiveIntensity: 2;
+                `);
+                glowRing.setAttribute('color', frame.color);
+                
+                currentFrame++;
+            }, CONFIG.signalSpeed / steps);
+            
+            // Pulsing glow animation
+            anime({
+                targets: glowRing.object3D.scale,
+                x: [1, 1.3, 1],
+                y: [1, 1.3, 1],
+                z: [1, 1.3, 1],
+                duration: CONFIG.signalSpeed,
+                easing: 'easeInOutSine'
+            });
+            
+            // Opacity fade
+            anime({
+                targets: [bgGlow.object3D, text.object3D],
+                opacity: [1, 0.8, 0],
+                duration: CONFIG.signalSpeed,
+                easing: 'easeInOutQuad'
+            });
+        }
+
+        // Helper function to interpolate between two hex colors
+        function lerpColor(color1, color2, t) {
+            const c1 = hexToRgb(color1);
+            const c2 = hexToRgb(color2);
+            
+            const r = Math.round(c1.r + (c2.r - c1.r) * t);
+            const g = Math.round(c1.g + (c2.g - c1.g) * t);
+            const b = Math.round(c1.b + (c2.b - c1.b) * t);
+            
+            return rgbToHex(r, g, b);
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+    </script>
 </body>
 </html>
