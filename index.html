@@ -67,12 +67,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
-            animation: shimmer 3s ease-in-out infinite;
-        }
-
-        @keyframes shimmer {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
         }
 
         .subtitle {
@@ -393,26 +387,26 @@
 <body>
     <!-- Welcome Screen -->
     <div id="welcome-screen">
-        <div class="logo">✨</div>
+        <div class="logo">🧠</div>
         <div class="title">Neural Night</div>
-        <div class="subtitle">Watch Colorful Sparks of AI Thinking</div>
+        <div class="subtitle">Watch AI Process Your Thoughts</div>
         
         <div class="instructions">
             <div class="instruction-item">
                 <div class="step-num">1</div>
-                <div class="step-text">Point at Neural Night poster to start</div>
+                <div class="step-text">Point your camera at the Neural Night poster</div>
             </div>
             <div class="instruction-item">
                 <div class="step-num">2</div>
-                <div class="step-text">Each text changes neuron colors dynamically</div>
+                <div class="step-text">Type any text and watch it flow through neurons</div>
             </div>
             <div class="instruction-item">
                 <div class="step-num">3</div>
-                <div class="step-text">Watch golden glow pulse during processing</div>
+                <div class="step-text">Tap any neuron to trigger golden spark explosions</div>
             </div>
             <div class="instruction-item">
                 <div class="step-num">4</div>
-                <div class="step-text">Tap neurons for golden spark explosions</div>
+                <div class="step-text">See glowing words travel from left to right</div>
             </div>
         </div>
 
@@ -457,10 +451,11 @@
                 <button id="send-btn">Send</button>
             </div>
             <div class="quick-chips">
-                <div class="chip" data-text="Starry night sky">⭐ Starry night</div>
-                <div class="chip" data-text="Dream of colors">🎨 Dream colors</div>
-                <div class="chip" data-text="Paint universe">🌌 Paint universe</div>
-                <div class="chip" data-text="Golden thoughts">✨ Golden thoughts</div>
+                <div class="chip" data-text="Infinite cosmos">🌌 Infinite cosmos</div>
+                <div class="chip" data-text="Electric dreams">⚡ Electric dreams</div>
+                <div class="chip" data-text="Quantum leap">🔮 Quantum leap</div>
+                <div class="chip" data-text="Digital soul">💫 Digital soul</div>
+                <div class="chip" data-text="Cosmic dance">✨ Cosmic dance</div>
             </div>
         </div>
 
@@ -498,29 +493,28 @@
         // ============================================
         
         const CONFIG = {
-            // 6 distinct colors for each layer
             layers: [
-                { name: "Embedding", neurons: 6, x: -1.5, baseColor: "#FF6B9D", desc: "Converts words into numerical vectors" },      // Pink
-                { name: "Attention-1", neurons: 10, x: -0.9, baseColor: "#4FC3F7", desc: "Finds relationships between words" },        // Cyan
-                { name: "Feed-Forward", neurons: 12, x: -0.3, baseColor: "#9C27B0", desc: "Deep pattern transformation" },             // Purple
-                { name: "Normalization", neurons: 8, x: 0.3, baseColor: "#00BCD4", desc: "Stabilizes neural signals" },              // Teal
-                { name: "Attention-2", neurons: 10, x: 0.9, baseColor: "#FF9800", desc: "Refines word understanding" },              // Orange
-                { name: "Output", neurons: 6, x: 1.5, baseColor: "#4CAF50", desc: "Generates final result" }                         // Green
+                { name: "Embedding", neurons: 6, x: -1.5, baseColor: "#FF6B9D", desc: "Converts words into numerical vectors" },
+                { name: "Attention-1", neurons: 10, x: -0.9, baseColor: "#4FC3F7", desc: "Finds relationships between words" },
+                { name: "Feed-Forward", neurons: 12, x: -0.3, baseColor: "#9C27B0", desc: "Deep pattern transformation" },
+                { name: "Normalization", neurons: 8, x: 0.3, baseColor: "#00BCD4", desc: "Stabilizes neural signals" },
+                { name: "Attention-2", neurons: 10, x: 0.9, baseColor: "#FF9800", desc: "Refines word understanding" },
+                { name: "Output", neurons: 6, x: 1.5, baseColor: "#4CAF50", desc: "Generates final result" }
             ],
             neuronRadius: 0.08,
             glowRadius: 0.15,
+            sparkleRadius: 0.012,  // FIXED: Smaller sparkles
             connectionOpacity: 0.2,
             signalSpeed: 1200,
-            goldenGlow: "#FFD700"  // Golden color for processing glow
+            goldenGlow: "#FFD700"
         };
 
-        // Color palettes for dynamic changes
         const COLOR_PALETTES = [
-            ["#FF6B9D", "#4FC3F7", "#9C27B0", "#00BCD4", "#FF9800", "#4CAF50"],  // Original
-            ["#E91E63", "#2196F3", "#673AB7", "#00ACC1", "#F57C00", "#388E3C"],  // Deeper
-            ["#FF4081", "#03A9F4", "#9C27B0", "#0097A7", "#FF6F00", "#66BB6A"],  // Vibrant
-            ["#F06292", "#29B6F6", "#BA68C8", "#26C6DA", "#FFA726", "#81C784"],  // Light
-            ["#EC407A", "#42A5F5", "#AB47BC", "#26A69A", "#FFB74D", "#AED581"]   // Balanced
+            ["#FF6B9D", "#4FC3F7", "#9C27B0", "#00BCD4", "#FF9800", "#4CAF50"],
+            ["#E91E63", "#2196F3", "#673AB7", "#00ACC1", "#F57C00", "#388E3C"],
+            ["#FF4081", "#03A9F4", "#9C27B0", "#0097A7", "#FF6F00", "#66BB6A"],
+            ["#F06292", "#29B6F6", "#BA68C8", "#26C6DA", "#FFA726", "#81C784"],
+            ["#EC407A", "#42A5F5", "#AB47BC", "#26A69A", "#FFB74D", "#AED581"]
         ];
 
         const state = {
@@ -531,7 +525,9 @@
             connections: [],
             sceneReady: false,
             activeSignals: [],
-            currentPaletteIndex: 0
+            currentPaletteIndex: 0,
+            inputLabels: [],
+            outputLabels: []
         };
 
         // ============================================
@@ -599,7 +595,7 @@
                     state.arActive = true;
                 }).catch((error) => {
                     console.error('❌ AR error:', error);
-                    alert('Camera permission required. Please allow camera access.');
+                    alert('Camera permission required.');
                     handleExit();
                 });
             }
@@ -612,6 +608,16 @@
                 state.arActive = false;
             }
             
+            cleanupSignals();
+            
+            document.getElementById('ar-interface').classList.remove('active');
+            document.getElementById('welcome-screen').classList.remove('hidden');
+            
+            state.targetFound = false;
+            state.processing = false;
+        }
+
+        function cleanupSignals() {
             state.activeSignals.forEach(signal => {
                 if (signal.element && signal.element.parentNode) {
                     signal.element.parentNode.removeChild(signal.element);
@@ -619,11 +625,19 @@
             });
             state.activeSignals = [];
             
-            document.getElementById('ar-interface').classList.remove('active');
-            document.getElementById('welcome-screen').classList.remove('hidden');
+            state.inputLabels.forEach(label => {
+                if (label && label.parentNode) {
+                    label.parentNode.removeChild(label);
+                }
+            });
+            state.inputLabels = [];
             
-            state.targetFound = false;
-            state.processing = false;
+            state.outputLabels.forEach(label => {
+                if (label && label.parentNode) {
+                    label.parentNode.removeChild(label);
+                }
+            });
+            state.outputLabels = [];
         }
 
         // ============================================
@@ -641,7 +655,7 @@
             createNetwork();
             
             setTimeout(() => {
-                document.getElementById('text-input').value = 'Golden thoughts';
+                document.getElementById('text-input').value = 'Infinite cosmos';
                 processInput();
             }, 1000);
             
@@ -658,12 +672,7 @@
             document.getElementById('text-input-panel').style.display = 'none';
             document.getElementById('layer-info').style.display = 'none';
             
-            state.activeSignals.forEach(signal => {
-                if (signal.element && signal.element.parentNode) {
-                    signal.element.parentNode.removeChild(signal.element);
-                }
-            });
-            state.activeSignals = [];
+            cleanupSignals();
         }
 
         // ============================================
@@ -755,12 +764,12 @@
             `);
             glow.setAttribute('class', 'neuron-glow');
 
-            // Golden/Yellowish sparkles (6 around neuron)
+            // FIXED: Smaller golden sparkles
             for (let i = 0; i < 6; i++) {
                 const angle = (i / 6) * Math.PI * 2;
-                const dist = CONFIG.neuronRadius * 1.9;
+                const dist = CONFIG.neuronRadius * 1.5;  // Closer to neuron
                 const sparkle = document.createElement('a-sphere');
-                sparkle.setAttribute('radius', '0.018');
+                sparkle.setAttribute('radius', CONFIG.sparkleRadius);  // Much smaller
                 sparkle.setAttribute('position', `${Math.cos(angle) * dist} ${Math.sin(angle) * dist} 0`);
                 sparkle.setAttribute('material', `
                     shader: flat;
@@ -824,10 +833,27 @@
             
             state.processing = true;
             
-            // Change neuron colors for new input
+            // Clean up old labels
+            state.inputLabels.forEach(label => {
+                if (label && label.parentNode) {
+                    label.parentNode.removeChild(label);
+                }
+            });
+            state.inputLabels = [];
+            
+            state.outputLabels.forEach(label => {
+                if (label && label.parentNode) {
+                    label.parentNode.removeChild(label);
+                }
+            });
+            state.outputLabels = [];
+            
             changeNeuronColors();
             
             const words = text.split(/\s+/).filter(w => w.length > 0);
+            
+            // Show input text at first layer
+            showInputText(words);
             
             let delay = 0;
             CONFIG.layers.forEach((layer, idx) => {
@@ -839,6 +865,11 @@
                         setTimeout(() => {
                             propagateWords(idx, words);
                         }, 600);
+                    } else {
+                        // Show output text at last layer
+                        setTimeout(() => {
+                            showOutputText(words);
+                        }, 800);
                     }
                 }, delay);
                 
@@ -847,11 +878,52 @@
             
             setTimeout(() => {
                 state.processing = false;
-            }, delay + 500);
+            }, delay + 2000);
+        }
+
+        function showInputText(words) {
+            const container = document.getElementById('network-container');
+            const inputLayer = state.neurons[0];
+            const firstNeuron = inputLayer[0];
+            
+            const label = document.createElement('a-entity');
+            label.setAttribute('position', `${firstNeuron.position.x - 0.3} ${firstNeuron.position.y + 0.3} ${firstNeuron.position.z}`);
+            
+            const text = document.createElement('a-text');
+            text.setAttribute('value', `INPUT:\n${words.join(' ')}`);
+            text.setAttribute('align', 'left');
+            text.setAttribute('width', '0.6');
+            text.setAttribute('color', '#FFD700');
+            text.setAttribute('shader', 'flat');
+            text.setAttribute('look-at', '[camera]');
+            
+            label.appendChild(text);
+            container.appendChild(label);
+            state.inputLabels.push(label);
+        }
+
+        function showOutputText(words) {
+            const container = document.getElementById('network-container');
+            const outputLayer = state.neurons[state.neurons.length - 1];
+            const lastNeuron = outputLayer[outputLayer.length - 1];
+            
+            const label = document.createElement('a-entity');
+            label.setAttribute('position', `${lastNeuron.position.x + 0.3} ${lastNeuron.position.y - 0.3} ${lastNeuron.position.z}`);
+            
+            const text = document.createElement('a-text');
+            text.setAttribute('value', `OUTPUT:\n${words.join(' ')}`);
+            text.setAttribute('align', 'right');
+            text.setAttribute('width', '0.6');
+            text.setAttribute('color', '#00FF88');
+            text.setAttribute('shader', 'flat');
+            text.setAttribute('look-at', '[camera]');
+            
+            label.appendChild(text);
+            container.appendChild(label);
+            state.outputLabels.push(label);
         }
 
         function changeNeuronColors() {
-            // Cycle through color palettes
             state.currentPaletteIndex = (state.currentPaletteIndex + 1) % COLOR_PALETTES.length;
             const newPalette = COLOR_PALETTES[state.currentPaletteIndex];
             
@@ -862,23 +934,14 @@
                     neuronData.currentColor = newColor;
                     const sphere = neuronData.element.querySelector('a-sphere');
                     
-                    // Smooth color transition
-                    anime({
-                        targets: { color: neuronData.baseColor },
-                        color: newColor,
-                        duration: 800,
-                        easing: 'easeInOutQuad',
-                        update: function(anim) {
-                            sphere.setAttribute('material', `
-                                color: ${newColor};
-                                emissive: ${newColor};
-                                emissiveIntensity: 1.0;
-                            `);
-                            
-                            const glow = sphere.querySelector('.neuron-glow');
-                            glow.setAttribute('material', `color: ${newColor}`);
-                        }
-                    });
+                    sphere.setAttribute('material', `
+                        color: ${newColor};
+                        emissive: ${newColor};
+                        emissiveIntensity: 1.0;
+                    `);
+                    
+                    const glow = sphere.querySelector('.neuron-glow');
+                    glow.setAttribute('material', `color: ${newColor}`);
                 });
             });
         }
@@ -909,26 +972,23 @@
             const glow = sphere.querySelector('.neuron-glow');
             const sparkles = sphere.querySelectorAll('.sparkle');
             
-            // Neuron scale bounce
             anime({
                 targets: neuronElement.object3D.scale,
-                x: [1, 1.6, 1],
-                y: [1, 1.6, 1],
-                z: [1, 1.6, 1],
+                x: [1, 1.4, 1],
+                y: [1, 1.4, 1],
+                z: [1, 1.4, 1],
                 duration: 500,
                 easing: 'easeOutElastic(1, 0.5)'
             });
             
-            // Neuron emissive flash
             sphere.setAttribute('material', `emissive: ${color}; emissiveIntensity: 4.0`);
             
-            // GOLDEN GLOW during processing
+            // Golden glow during processing
             glow.setAttribute('material', `
                 color: ${CONFIG.goldenGlow};
                 opacity: 0.8;
             `);
             
-            // Make sparkles glow brighter
             sparkles.forEach(sparkle => {
                 sparkle.setAttribute('material', `emissiveIntensity: 5`);
             });
@@ -942,12 +1002,11 @@
                 });
             }, 400);
             
-            // Golden glow pulse
             anime({
                 targets: glow.object3D.scale,
-                x: [1, 2.5, 1],
-                y: [1, 2.5, 1],
-                z: [1, 2.5, 1],
+                x: [1, 2.2, 1],
+                y: [1, 2.2, 1],
+                z: [1, 2.2, 1],
                 duration: 500,
                 easing: 'easeOutQuad'
             });
@@ -959,9 +1018,9 @@
             
             anime({
                 targets: neuronElement.object3D.scale,
-                x: [1, 1.6, 1],
-                y: [1, 1.6, 1],
-                z: [1, 1.6, 1],
+                x: [1, 1.4, 1],
+                y: [1, 1.4, 1],
+                z: [1, 1.4, 1],
                 duration: 500,
                 easing: 'easeOutElastic(1, 0.5)'
             });
@@ -978,11 +1037,10 @@
         function createGoldenSparkBurst(position) {
             const container = document.getElementById('network-container');
             
-            // Create 16 golden sparks
             for (let i = 0; i < 16; i++) {
                 const angle = (i / 16) * Math.PI * 2;
                 const spark = document.createElement('a-sphere');
-                spark.setAttribute('radius', '0.025');
+                spark.setAttribute('radius', '0.02');
                 spark.setAttribute('position', `${position.x} ${position.y} ${position.z}`);
                 spark.setAttribute('material', `
                     shader: flat;
@@ -1012,7 +1070,6 @@
                     }
                 });
                 
-                // Fade out
                 anime({
                     targets: spark.object3D.scale,
                     x: [1, 0],
@@ -1053,15 +1110,15 @@
             const text = document.createElement('a-text');
             text.setAttribute('value', word);
             text.setAttribute('align', 'center');
-            text.setAttribute('width', '0.7');
+            text.setAttribute('width', '0.5');
             text.setAttribute('color', '#FFFFFF');
             text.setAttribute('shader', 'flat');
             text.setAttribute('look-at', '[camera]');
             text.setAttribute('position', '0 0 0.02');
             
             const bgGlow = document.createElement('a-plane');
-            bgGlow.setAttribute('width', '0.4');
-            bgGlow.setAttribute('height', '0.15');
+            bgGlow.setAttribute('width', '0.3');
+            bgGlow.setAttribute('height', '0.12');
             bgGlow.setAttribute('color', color);
             bgGlow.setAttribute('material', `
                 shader: flat;
@@ -1072,10 +1129,9 @@
             `);
             bgGlow.setAttribute('look-at', '[camera]');
             
-            // Golden outer ring
             const glowRing = document.createElement('a-ring');
-            glowRing.setAttribute('radius-inner', '0.18');
-            glowRing.setAttribute('radius-outer', '0.25');
+            glowRing.setAttribute('radius-inner', '0.15');
+            glowRing.setAttribute('radius-outer', '0.2');
             glowRing.setAttribute('color', '#FFD700');
             glowRing.setAttribute('material', `
                 shader: flat;
@@ -1084,13 +1140,6 @@
                 side: double;
             `);
             glowRing.setAttribute('look-at', '[camera]');
-            
-            // Golden particle trail
-            for (let i = 0; i < 6; i++) {
-                setTimeout(() => {
-                    createGoldenTrailParticle(signal.object3D.position.clone());
-                }, i * 150);
-            }
             
             signal.appendChild(glowRing);
             signal.appendChild(bgGlow);
@@ -1118,49 +1167,11 @@
             
             anime({
                 targets: glowRing.object3D.scale,
-                x: [1, 1.5, 1],
-                y: [1, 1.5, 1],
-                z: [1, 1.5, 1],
+                x: [1, 1.3, 1],
+                y: [1, 1.3, 1],
+                z: [1, 1.3, 1],
                 duration: CONFIG.signalSpeed,
                 easing: 'easeInOutSine'
-            });
-        }
-
-        function createGoldenTrailParticle(position) {
-            const container = document.getElementById('network-container');
-            
-            const particle = document.createElement('a-sphere');
-            particle.setAttribute('radius', '0.03');
-            particle.setAttribute('position', `${position.x} ${position.y} ${position.z}`);
-            particle.setAttribute('material', `
-                shader: flat;
-                color: #FFD700;
-                emissive: #FFFF00;
-                emissiveIntensity: 4;
-                transparent: true;
-            `);
-            
-            container.appendChild(particle);
-            
-            anime({
-                targets: particle.object3D,
-                opacity: [1, 0],
-                duration: 700,
-                easing: 'easeOutQuad',
-                complete: () => {
-                    if (particle.parentNode) {
-                        particle.parentNode.removeChild(particle);
-                    }
-                }
-            });
-            
-            anime({
-                targets: particle.object3D.scale,
-                x: [1, 0.1],
-                y: [1, 0.1],
-                z: [1, 0.1],
-                duration: 700,
-                easing: 'easeOutQuad'
             });
         }
     </script>
