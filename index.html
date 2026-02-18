@@ -63,22 +63,28 @@
         .title {
             font-size: clamp(28px, 6vw, 40px);
             font-weight: 800;
-            background: linear-gradient(135deg, #4FC3F7, #FFD700);
+            background: linear-gradient(135deg, #FFD700, #FFA500, #FFD700);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
         }
 
         .subtitle {
             font-size: clamp(14px, 3vw, 18px);
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 215, 0, 0.8);
             margin-bottom: 40px;
             text-align: center;
         }
 
         .instructions {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 215, 0, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
             border-radius: 16px;
             padding: 20px;
             max-width: 90%;
@@ -102,13 +108,14 @@
             min-width: 28px;
             height: 28px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #FFD700, #FFA500);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: #000;
             font-weight: 700;
             font-size: 14px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
         }
 
         .step-text {
@@ -119,15 +126,15 @@
         }
 
         .start-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #FFD700, #FFA500);
             border: none;
-            color: white;
+            color: #000;
             padding: 16px 48px;
             border-radius: 12px;
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4);
             transition: transform 0.3s ease;
         }
 
@@ -197,7 +204,7 @@
 
         .instructions-card {
             background: rgba(15, 15, 30, 0.95);
-            border: 2px solid rgba(79, 195, 247, 0.4);
+            border: 2px solid rgba(255, 215, 0, 0.4);
             border-radius: 20px;
             padding: 30px;
             max-width: 90%;
@@ -208,7 +215,7 @@
         .instructions-title {
             font-size: 20px;
             font-weight: 700;
-            color: #4FC3F7;
+            color: #FFD700;
             margin-bottom: 20px;
         }
 
@@ -228,14 +235,14 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            border: 3px solid #4FC3F7;
+            border: 3px solid #FFD700;
             border-radius: 50%;
             animation: scanPulse 2s ease-in-out infinite;
         }
 
         @keyframes scanPulse {
-            0%, 100% { transform: scale(0.8); opacity: 0.5; }
-            50% { transform: scale(1); opacity: 1; }
+            0%, 100% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
+            50% { transform: scale(1); opacity: 1; box-shadow: 0 0 40px rgba(255, 215, 0, 0.6); }
         }
 
         .scan-icon {
@@ -254,7 +261,7 @@
             right: 70px;
             background: rgba(10, 10, 20, 0.95);
             backdrop-filter: blur(20px);
-            border: 2px solid rgba(79, 195, 247, 0.4);
+            border: 2px solid rgba(255, 215, 0, 0.4);
             border-radius: 12px;
             padding: 12px;
             display: none;
@@ -270,7 +277,7 @@
         #text-input {
             flex: 1;
             background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 215, 0, 0.3);
             border-radius: 8px;
             padding: 10px;
             color: white;
@@ -283,14 +290,15 @@
         }
 
         #send-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #FFD700, #FFA500);
             border: none;
-            color: white;
+            color: #000;
             padding: 10px 20px;
             border-radius: 8px;
             font-weight: 700;
             font-size: 14px;
             cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
         }
 
         #send-btn:active {
@@ -304,18 +312,18 @@
         }
 
         .chip {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
             border-radius: 12px;
             padding: 4px 10px;
             font-size: 11px;
-            color: white;
+            color: #FFD700;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
         .chip:active {
-            background: rgba(79, 195, 247, 0.3);
+            background: rgba(255, 215, 0, 0.3);
             transform: scale(0.95);
         }
 
@@ -327,7 +335,7 @@
             right: 15px;
             background: rgba(10, 10, 20, 0.95);
             backdrop-filter: blur(20px);
-            border: 2px solid rgba(79, 195, 247, 0.4);
+            border: 2px solid rgba(255, 215, 0, 0.4);
             border-radius: 12px;
             padding: 12px;
             display: none;
@@ -343,13 +351,13 @@
         .layer-name {
             font-size: 12px;
             font-weight: 700;
-            color: #4FC3F7;
+            color: #FFD700;
             text-transform: uppercase;
         }
 
         .layer-status {
             font-size: 11px;
-            color: #FFD700;
+            color: #FFA500;
             font-weight: 600;
         }
 
@@ -390,9 +398,9 @@
 <body>
     <!-- Welcome Screen -->
     <div id="welcome-screen">
-        <div class="logo">🧠</div>
+        <div class="logo">✨</div>
         <div class="title">Neural Night</div>
-        <div class="subtitle">Watch AI Process Your Thoughts</div>
+        <div class="subtitle">Watch Golden Sparks of AI Thinking</div>
         
         <div class="instructions">
             <div class="instruction-item">
@@ -401,15 +409,15 @@
             </div>
             <div class="instruction-item">
                 <div class="step-num">2</div>
-                <div class="step-text">Type any text and watch it flow through neurons</div>
+                <div class="step-text">Type any text and watch golden sparks flow</div>
             </div>
             <div class="instruction-item">
                 <div class="step-num">3</div>
-                <div class="step-text">Tap neurons to activate them individually</div>
+                <div class="step-text">Tap neurons to create electric sparkles</div>
             </div>
             <div class="instruction-item">
                 <div class="step-num">4</div>
-                <div class="step-text">See glowing words travel from left to right</div>
+                <div class="step-text">See words travel with golden particle trails</div>
             </div>
         </div>
 
@@ -423,7 +431,7 @@
             <span style="font-size: 20px; color: white; font-weight: bold;">✕</span>
         </div>
 
-        <!-- Instructions Overlay (shows until target found) -->
+        <!-- Instructions Overlay -->
         <div id="instructions-overlay">
             <div class="instructions-card">
                 <div class="instructions-title">🎯 Find the Poster</div>
@@ -457,11 +465,10 @@
                 <button id="send-btn">Send</button>
             </div>
             <div class="quick-chips">
-                <div class="chip" data-text="Starry night sky">Starry night sky</div>
-                <div class="chip" data-text="Dream of colors">Dream of colors</div>
-                <div class="chip" data-text="Paint the universe">Paint the universe</div>
-                <div class="chip" data-text="Swirling thoughts">Swirling thoughts</div>
-                <div class="chip" data-text="Infinite creativity">Infinite creativity</div>
+                <div class="chip" data-text="Starry night sky">⭐ Starry night</div>
+                <div class="chip" data-text="Dream of colors">🎨 Dream colors</div>
+                <div class="chip" data-text="Paint universe">🌌 Paint universe</div>
+                <div class="chip" data-text="Golden thoughts">✨ Golden thoughts</div>
             </div>
         </div>
 
@@ -471,7 +478,7 @@
                 <div class="layer-name" id="current-layer">Embedding Layer</div>
                 <div class="layer-status" id="layer-status">Ready</div>
             </div>
-            <div class="layer-desc" id="layer-desc">Converts words into numerical representations</div>
+            <div class="layer-desc" id="layer-desc">Converts words into numerical vectors</div>
         </div>
     </div>
 
@@ -500,18 +507,17 @@
         // ============================================
         
         const CONFIG = {
-            // 6 Layers: Embedding → Attention → FFN → Norm → Attention2 → Output
             layers: [
                 { name: "Embedding", neurons: 6, x: -1.5, color: "#FFD700", desc: "Converts words into numerical vectors" },
-                { name: "Attention-1", neurons: 10, x: -0.9, color: "#4FC3F7", desc: "Finds relationships between words" },
-                { name: "Feed-Forward", neurons: 12, x: -0.3, color: "#FF69B4", desc: "Deep pattern transformation" },
-                { name: "Normalization", neurons: 8, x: 0.3, color: "#9C27B0", desc: "Stabilizes neural signals" },
-                { name: "Attention-2", neurons: 10, x: 0.9, color: "#00BCD4", desc: "Refines word understanding" },
-                { name: "Output", neurons: 6, x: 1.5, color: "#00FF88", desc: "Generates final result" }
+                { name: "Attention-1", neurons: 10, x: -0.9, color: "#FFA500", desc: "Finds relationships between words" },
+                { name: "Feed-Forward", neurons: 12, x: -0.3, color: "#FFBF00", desc: "Deep pattern transformation" },
+                { name: "Normalization", neurons: 8, x: 0.3, color: "#FFD700", desc: "Stabilizes neural signals" },
+                { name: "Attention-2", neurons: 10, x: 0.9, color: "#FFA500", desc: "Refines word understanding" },
+                { name: "Output", neurons: 6, x: 1.5, color: "#FFCC00", desc: "Generates final result" }
             ],
             neuronRadius: 0.08,
             glowRadius: 0.15,
-            connectionOpacity: 0.15,
+            connectionOpacity: 0.2,
             signalSpeed: 1200
         };
 
@@ -521,7 +527,8 @@
             processing: false,
             neurons: [],
             connections: [],
-            sceneReady: false
+            sceneReady: false,
+            activeSignals: []
         };
 
         // ============================================
@@ -533,14 +540,12 @@
         });
 
         function setupEventListeners() {
-            // Start button
             document.getElementById('start-btn').addEventListener('click', handleStart);
             document.getElementById('start-btn').addEventListener('touchend', (e) => {
                 e.preventDefault();
                 handleStart();
             });
 
-            // Exit button
             const exitBtn = document.getElementById('exit-btn');
             exitBtn.addEventListener('click', handleExit);
             exitBtn.addEventListener('touchend', (e) => {
@@ -549,13 +554,11 @@
                 handleExit();
             });
 
-            // Text input
             document.getElementById('send-btn').addEventListener('click', processInput);
             document.getElementById('text-input').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') processInput();
             });
 
-            // Quick chips
             document.querySelectorAll('.chip').forEach(chip => {
                 chip.addEventListener('click', () => {
                     document.getElementById('text-input').value = chip.dataset.text;
@@ -563,15 +566,12 @@
                 });
             });
 
-            // AR events
             const target = document.querySelector('#target');
             target.addEventListener('targetFound', onTargetFound);
             target.addEventListener('targetLost', onTargetLost);
 
-            // Scene ready
             const scene = document.querySelector('a-scene');
             scene.addEventListener('loaded', () => {
-                console.log('Scene loaded');
                 state.sceneReady = true;
             });
         }
@@ -596,7 +596,7 @@
                     state.arActive = true;
                 }).catch((error) => {
                     console.error('❌ AR error:', error);
-                    alert('Camera permission required. Please allow camera access and try again.');
+                    alert('Camera permission required. Please allow camera access.');
                     handleExit();
                 });
             }
@@ -609,10 +609,17 @@
                 state.arActive = false;
             }
             
+            // Clean up active signals
+            state.activeSignals.forEach(signal => {
+                if (signal.element && signal.element.parentNode) {
+                    signal.element.parentNode.removeChild(signal.element);
+                }
+            });
+            state.activeSignals = [];
+            
             document.getElementById('ar-interface').classList.remove('active');
             document.getElementById('welcome-screen').classList.remove('hidden');
             
-            // Reset state
             state.targetFound = false;
             state.processing = false;
         }
@@ -625,19 +632,14 @@
             console.log('🎯 Target found!');
             state.targetFound = true;
             
-            // Hide instructions overlay
             document.getElementById('instructions-overlay').classList.add('hidden');
-            
-            // Show controls
             document.getElementById('text-input-panel').style.display = 'block';
             document.getElementById('layer-info').style.display = 'block';
             
-            // Create network
             createNetwork();
             
-            // Auto demo
             setTimeout(() => {
-                document.getElementById('text-input').value = 'Dream of colors';
+                document.getElementById('text-input').value = 'Golden thoughts';
                 processInput();
             }, 1000);
             
@@ -650,12 +652,17 @@
             console.log('👋 Target lost');
             state.targetFound = false;
             
-            // Show instructions overlay again
             document.getElementById('instructions-overlay').classList.remove('hidden');
-            
-            // Hide controls
             document.getElementById('text-input-panel').style.display = 'none';
             document.getElementById('layer-info').style.display = 'none';
+            
+            // Clean up signals
+            state.activeSignals.forEach(signal => {
+                if (signal.element && signal.element.parentNode) {
+                    signal.element.parentNode.removeChild(signal.element);
+                }
+            });
+            state.activeSignals = [];
         }
 
         // ============================================
@@ -668,14 +675,10 @@
             state.neurons = [];
             state.connections = [];
 
-            // Get viewport aspect ratio for adaptive scaling
             const aspect = window.innerWidth / window.innerHeight;
-            const isLandscape = aspect > 1;
-            const scale = isLandscape ? 1 : 0.8;
-            
+            const scale = aspect > 1 ? 1 : 0.8;
             container.setAttribute('scale', `${scale} ${scale} ${scale}`);
 
-            // Create layers (left to right, horizontal)
             CONFIG.layers.forEach((layerConfig, layerIdx) => {
                 const layerNeurons = [];
                 const spacing = 0.25;
@@ -701,19 +704,13 @@
                 state.neurons.push(layerNeurons);
             });
 
-            // Create connections
             for (let l = 0; l < state.neurons.length - 1; l++) {
                 const currentLayer = state.neurons[l];
                 const nextLayer = state.neurons[l + 1];
                 
                 currentLayer.forEach((start) => {
                     nextLayer.forEach((end) => {
-                        // Attention layers have more connections
-                        const isAttention = CONFIG.layers[l].name.includes('Attention') || 
-                                          CONFIG.layers[l + 1].name.includes('Attention');
-                        const probability = isAttention ? 0.5 : 0.3;
-                        
-                        if (Math.random() < probability) {
+                        if (Math.random() < 0.4) {
                             const conn = createConnection(start.position, end.position);
                             container.appendChild(conn);
                             state.connections.push({ element: conn, start, end });
@@ -722,11 +719,9 @@
                 });
             }
 
-            // Handle window resize
             window.addEventListener('resize', () => {
                 const aspect = window.innerWidth / window.innerHeight;
-                const isLandscape = aspect > 1;
-                const scale = isLandscape ? 1 : 0.8;
+                const scale = aspect > 1 ? 1 : 0.8;
                 container.setAttribute('scale', `${scale} ${scale} ${scale}`);
             });
         }
@@ -736,42 +731,39 @@
             neuron.setAttribute('position', `${x} ${y} ${z}`);
             neuron.setAttribute('data-layer', layer);
             neuron.setAttribute('data-index', index);
-            neuron.setAttribute('class', 'neuron');
 
-            // Main sphere (like the image - solid colored sphere)
             const sphere = document.createElement('a-sphere');
             sphere.setAttribute('radius', CONFIG.neuronRadius);
             sphere.setAttribute('material', `
                 shader: standard;
                 color: ${color};
-                metalness: 0.5;
-                roughness: 0.3;
+                metalness: 0.6;
+                roughness: 0.2;
                 emissive: ${color};
-                emissiveIntensity: 0.6;
+                emissiveIntensity: 1.0;
             `);
 
-            // Outer glow (soft halo like in the image)
             const glow = document.createElement('a-sphere');
             glow.setAttribute('radius', CONFIG.glowRadius);
             glow.setAttribute('material', `
                 shader: flat;
                 color: ${color};
                 transparent: true;
-                opacity: 0.2;
+                opacity: 0.3;
             `);
 
-            // Small sparkles around neuron
-            for (let i = 0; i < 4; i++) {
-                const angle = (i / 4) * Math.PI * 2;
-                const dist = CONFIG.neuronRadius * 1.8;
+            // Golden sparkles
+            for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * Math.PI * 2;
+                const dist = CONFIG.neuronRadius * 1.9;
                 const sparkle = document.createElement('a-sphere');
-                sparkle.setAttribute('radius', '0.015');
+                sparkle.setAttribute('radius', '0.018');
                 sparkle.setAttribute('position', `${Math.cos(angle) * dist} ${Math.sin(angle) * dist} 0`);
                 sparkle.setAttribute('material', `
                     shader: flat;
-                    color: ${color};
-                    emissive: ${color};
-                    emissiveIntensity: 2;
+                    color: #FFFF00;
+                    emissive: #FFFF00;
+                    emissiveIntensity: 3;
                 `);
                 sphere.appendChild(sparkle);
             }
@@ -779,10 +771,10 @@
             sphere.appendChild(glow);
             neuron.appendChild(sphere);
 
-            // Make interactive (tap to activate)
             neuron.addEventListener('click', () => {
                 if (state.targetFound) {
                     activateNeuron(neuron, color);
+                    createSparkBurst(neuron.object3D.position, color);
                 }
             });
 
@@ -800,11 +792,11 @@
             const midZ = (start.z + end.z) / 2;
             
             const line = document.createElement('a-cylinder');
-            line.setAttribute('radius', '0.005');
+            line.setAttribute('radius', '0.006');
             line.setAttribute('height', distance);
             line.setAttribute('material', `
                 shader: flat;
-                color: #4FC3F7;
+                color: #FFD700;
                 transparent: true;
                 opacity: ${CONFIG.connectionOpacity};
             `);
@@ -829,7 +821,6 @@
             
             const words = text.split(/\s+/).filter(w => w.length > 0);
             
-            // Process through all layers
             let delay = 0;
             CONFIG.layers.forEach((layer, idx) => {
                 setTimeout(() => {
@@ -854,11 +845,11 @@
         function updateLayerInfo(layerIdx) {
             const layer = CONFIG.layers[layerIdx];
             document.getElementById('current-layer').textContent = layer.name;
-            document.getElementById('layer-status').textContent = 'Active';
+            document.getElementById('layer-status').textContent = '⚡ Active';
             document.getElementById('layer-desc').textContent = layer.desc;
             
             setTimeout(() => {
-                document.getElementById('layer-status').textContent = 'Ready';
+                document.getElementById('layer-status').textContent = '✓ Ready';
             }, 1400);
         }
 
@@ -876,34 +867,69 @@
             const sphere = neuronElement.querySelector('a-sphere');
             const glow = sphere.querySelector('a-sphere');
             
-            // Scale pulse animation
             anime({
                 targets: neuronElement.object3D.scale,
-                x: [1, 1.5, 1],
-                y: [1, 1.5, 1],
-                z: [1, 1.5, 1],
-                duration: 600,
-                easing: 'easeInOutQuad'
+                x: [1, 1.6, 1],
+                y: [1, 1.6, 1],
+                z: [1, 1.6, 1],
+                duration: 500,
+                easing: 'easeOutElastic(1, 0.5)'
             });
             
-            // Enhanced emissive flash with glow
-            sphere.setAttribute('material', `emissive: ${color}; emissiveIntensity: 3.5`);
-            glow.setAttribute('material', `opacity: 0.6`);
+            sphere.setAttribute('material', `emissive: ${color}; emissiveIntensity: 4.0`);
+            glow.setAttribute('material', `opacity: 0.7`);
             
             setTimeout(() => {
-                sphere.setAttribute('material', `emissive: ${color}; emissiveIntensity: 0.6`);
-                glow.setAttribute('material', `opacity: 0.2`);
-            }, 400);
+                sphere.setAttribute('material', `emissive: ${color}; emissiveIntensity: 1.0`);
+                glow.setAttribute('material', `opacity: 0.3`);
+            }, 300);
             
-            // Pulse glow animation
             anime({
                 targets: glow.object3D.scale,
-                x: [1, 1.8, 1],
-                y: [1, 1.8, 1],
-                z: [1, 1.8, 1],
-                duration: 600,
-                easing: 'easeInOutQuad'
+                x: [1, 2.2, 1],
+                y: [1, 2.2, 1],
+                z: [1, 2.2, 1],
+                duration: 500,
+                easing: 'easeOutQuad'
             });
+        }
+
+        function createSparkBurst(position, color) {
+            const container = document.getElementById('network-container');
+            
+            for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2;
+                const spark = document.createElement('a-sphere');
+                spark.setAttribute('radius', '0.02');
+                spark.setAttribute('position', `${position.x} ${position.y} ${position.z}`);
+                spark.setAttribute('material', `
+                    shader: flat;
+                    color: #FFFF00;
+                    emissive: #FFFF00;
+                    emissiveIntensity: 3;
+                `);
+                
+                container.appendChild(spark);
+                
+                const distance = 0.4;
+                const targetX = position.x + Math.cos(angle) * distance;
+                const targetY = position.y + Math.sin(angle) * distance;
+                const targetZ = position.z + (Math.random() - 0.5) * 0.2;
+                
+                anime({
+                    targets: spark.object3D.position,
+                    x: targetX,
+                    y: targetY,
+                    z: targetZ,
+                    duration: 800,
+                    easing: 'easeOutQuad',
+                    complete: () => {
+                        if (spark.parentNode) {
+                            spark.parentNode.removeChild(spark);
+                        }
+                    }
+                });
+            }
         }
 
         function propagateWords(sourceLayerIdx, words) {
@@ -912,152 +938,140 @@
             
             words.forEach((word, wordIdx) => {
                 setTimeout(() => {
-                    const numPaths = Math.min(3, targetLayer.length);
+                    const numPaths = Math.min(2, targetLayer.length);
                     
                     for (let p = 0; p < numPaths; p++) {
                         setTimeout(() => {
                             const source = sourceLayer[Math.floor(Math.random() * sourceLayer.length)];
                             const target = targetLayer[Math.floor(Math.random() * targetLayer.length)];
                             
-                            createWordSignal(source.position, target.position, word, source.color, target.color);
+                            createWordSignal(source.position, target.position, word, source.color);
                         }, p * 150);
                     }
                 }, wordIdx * 250);
             });
         }
 
-        function createWordSignal(start, end, word, startColor, endColor) {
+        function createWordSignal(start, end, word, color) {
             const container = document.getElementById('network-container');
             
             const signal = document.createElement('a-entity');
             signal.setAttribute('position', `${start.x} ${start.y} ${start.z}`);
             
-            // Glowing background plate with gradient effect
-            const bgGlow = document.createElement('a-plane');
-            bgGlow.setAttribute('width', '0.35');
-            bgGlow.setAttribute('height', '0.12');
-            bgGlow.setAttribute('color', startColor);
-            bgGlow.setAttribute('material', `
-                shader: flat;
-                transparent: true;
-                opacity: 0.7;
-                emissive: ${startColor};
-                emissiveIntensity: 2;
-            `);
-            bgGlow.setAttribute('look-at', '[camera]');
-            
-            // Word text with glow
+            // Glowing text
             const text = document.createElement('a-text');
             text.setAttribute('value', word);
             text.setAttribute('align', 'center');
-            text.setAttribute('width', '0.6');
+            text.setAttribute('width', '0.7');
             text.setAttribute('color', '#FFFFFF');
             text.setAttribute('shader', 'flat');
             text.setAttribute('look-at', '[camera]');
-            text.setAttribute('position', '0 0 0.01');
+            text.setAttribute('position', '0 0 0.02');
+            
+            // Golden glow background
+            const bgGlow = document.createElement('a-plane');
+            bgGlow.setAttribute('width', '0.4');
+            bgGlow.setAttribute('height', '0.15');
+            bgGlow.setAttribute('color', color);
+            bgGlow.setAttribute('material', `
+                shader: flat;
+                transparent: true;
+                opacity: 0.8;
+                emissive: ${color};
+                emissiveIntensity: 2.5;
+            `);
+            bgGlow.setAttribute('look-at', '[camera]');
             
             // Outer glow ring
             const glowRing = document.createElement('a-ring');
-            glowRing.setAttribute('radius-inner', '0.15');
-            glowRing.setAttribute('radius-outer', '0.2');
-            glowRing.setAttribute('color', startColor);
+            glowRing.setAttribute('radius-inner', '0.18');
+            glowRing.setAttribute('radius-outer', '0.25');
+            glowRing.setAttribute('color', '#FFFF00');
             glowRing.setAttribute('material', `
                 shader: flat;
                 transparent: true;
-                opacity: 0.4;
+                opacity: 0.5;
                 side: double;
             `);
             glowRing.setAttribute('look-at', '[camera]');
+            
+            // Particle trail
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    createTrailParticle(signal.object3D.position.clone());
+                }, i * 150);
+            }
             
             signal.appendChild(glowRing);
             signal.appendChild(bgGlow);
             signal.appendChild(text);
             container.appendChild(signal);
             
-            // Animate movement with color transition
+            state.activeSignals.push({ element: signal, word });
+            
             anime({
                 targets: signal.object3D.position,
                 x: end.x,
                 y: end.y,
                 z: end.z,
                 duration: CONFIG.signalSpeed,
-                easing: 'easeInOutQuad',
+                easing: 'linear',
                 complete: () => {
-                    container.removeChild(signal);
+                    const index = state.activeSignals.findIndex(s => s.element === signal);
+                    if (index > -1) state.activeSignals.splice(index, 1);
+                    
+                    if (signal.parentNode) {
+                        signal.parentNode.removeChild(signal);
+                    }
                 }
             });
             
-            // Color transition animation
-            const colorFrames = [];
-            const steps = 20;
-            for (let i = 0; i <= steps; i++) {
-                const t = i / steps;
-                colorFrames.push({
-                    color: lerpColor(startColor, endColor, t),
-                    progress: t
-                });
-            }
-            
-            let currentFrame = 0;
-            const colorInterval = setInterval(() => {
-                if (currentFrame >= colorFrames.length) {
-                    clearInterval(colorInterval);
-                    return;
-                }
-                
-                const frame = colorFrames[currentFrame];
-                bgGlow.setAttribute('material', `
-                    color: ${frame.color};
-                    emissive: ${frame.color};
-                    emissiveIntensity: 2;
-                `);
-                glowRing.setAttribute('color', frame.color);
-                
-                currentFrame++;
-            }, CONFIG.signalSpeed / steps);
-            
-            // Pulsing glow animation
             anime({
                 targets: glowRing.object3D.scale,
-                x: [1, 1.3, 1],
-                y: [1, 1.3, 1],
-                z: [1, 1.3, 1],
+                x: [1, 1.4, 1],
+                y: [1, 1.4, 1],
+                z: [1, 1.4, 1],
                 duration: CONFIG.signalSpeed,
                 easing: 'easeInOutSine'
             });
+        }
+
+        function createTrailParticle(position) {
+            const container = document.getElementById('network-container');
             
-            // Opacity fade
+            const particle = document.createElement('a-sphere');
+            particle.setAttribute('radius', '0.025');
+            particle.setAttribute('position', `${position.x} ${position.y} ${position.z}`);
+            particle.setAttribute('material', `
+                shader: flat;
+                color: #FFFF00;
+                emissive: #FFFF00;
+                emissiveIntensity: 3;
+                transparent: true;
+            `);
+            
+            container.appendChild(particle);
+            
             anime({
-                targets: [bgGlow.object3D, text.object3D],
-                opacity: [1, 0.8, 0],
-                duration: CONFIG.signalSpeed,
-                easing: 'easeInOutQuad'
+                targets: particle.object3D,
+                opacity: [1, 0],
+                duration: 600,
+                easing: 'easeOutQuad',
+                complete: () => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                }
             });
-        }
-
-        // Helper function to interpolate between two hex colors
-        function lerpColor(color1, color2, t) {
-            const c1 = hexToRgb(color1);
-            const c2 = hexToRgb(color2);
             
-            const r = Math.round(c1.r + (c2.r - c1.r) * t);
-            const g = Math.round(c1.g + (c2.g - c1.g) * t);
-            const b = Math.round(c1.b + (c2.b - c1.b) * t);
-            
-            return rgbToHex(r, g, b);
-        }
-
-        function hexToRgb(hex) {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-            } : null;
-        }
-
-        function rgbToHex(r, g, b) {
-            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            anime({
+                targets: particle.object3D.scale,
+                x: [1, 0.1],
+                y: [1, 0.1],
+                z: [1, 0.1],
+                duration: 600,
+                easing: 'easeOutQuad'
+            });
         }
     </script>
 </body>
